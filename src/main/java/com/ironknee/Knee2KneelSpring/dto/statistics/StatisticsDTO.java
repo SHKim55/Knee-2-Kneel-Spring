@@ -14,17 +14,17 @@ public class StatisticsDTO {
     private Long roundTotal;
     private Long winTotal;
     private Long loseTotal;
-    private Long winRateTotal;
+    private Double winRateTotal;
     private Long roundStudent;
     private Long winStudent;
     private Long loseStudent;
-    private Long winRateStudent;
+    private Double winRateStudent;
     private Long roundProfessor;
     private Long winProfessor;
     private Long loseProfessor;
-    private Long winRateProfessor;
+    private Double winRateProfessor;
     private Long roundAssistant;
     private Long winAssistant;
     private Long loseAssistant;
-    private Long winRateAssistant;
+    private Double winRateAssistant;
 }
