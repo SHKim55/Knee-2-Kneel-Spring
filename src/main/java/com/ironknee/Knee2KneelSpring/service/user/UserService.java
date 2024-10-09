@@ -9,18 +9,37 @@ import com.ironknee.Knee2KneelSpring.entity.StatisticsEntity;
 import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.StatisticsRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
+import com.ironknee.Knee2KneelSpring.security.JwtUtil;
 import jakarta.transaction.Transactional;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class UserService {
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
 
-    public UserService(final UserRepository userRepository, final StatisticsRepository statisticsRepository) {
+    public UserService(final PasswordEncoder passwordEncoder, final AuthenticationManager authenticationManager,
+                       final JwtUtil jwtUtil, final UserRepository userRepository,
+                       final StatisticsRepository statisticsRepository) {
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.statisticsRepository = statisticsRepository;
     }
@@ -48,13 +67,16 @@ public class UserService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : User having this nickname already exists", null);
         }
 
+        String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
+
         UserEntity userEntity = UserEntity.builder()
                 .nickname(userRegisterDTO.getNickname())
-                .password(userRegisterDTO.getPassword())
+                .password(encodedPassword)
                 .email(userRegisterDTO.getEmail())
                 .build();
 
-        System.out.println(userEntity.toString());
+        System.out.println(userEntity.getNickname() + " " + userEntity.getPassword());
+        System.out.println(userEntity.getUserRank());
 
         UserEntity newUserEntity;
         try {
@@ -76,8 +98,24 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseObject<UserDTO> logIn(UserLoginDTO userLoginDTO) {
-        return new ResponseObject<>();
+    public ResponseObject<String> logIn(UserLoginDTO userLoginDTO) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    // Email을 username으로 사용
+                    new UsernamePasswordAuthenticationToken(userLoginDTO.getEmail(), userLoginDTO.getPassword())
+            );
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String jwt = jwtUtil.generateToken(userDetails.getUsername());
+
+            System.out.println("JWT Token : " + jwt);
+
+            return new ResponseObject<>(ResponseCode.success.toString(), "success", jwt);
+
+        } catch (AuthenticationException e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Error occurred while logging in", null);
+        }
     }
 
     public ResponseObject<UserDTO> getUserInfo(final UUID userId) {

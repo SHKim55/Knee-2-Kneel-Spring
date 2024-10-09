@@ -4,7 +4,10 @@ import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.user.UserDTO;
 import com.ironknee.Knee2KneelSpring.dto.user.UserLoginDTO;
 import com.ironknee.Knee2KneelSpring.dto.user.UserRegisterDTO;
+import com.ironknee.Knee2KneelSpring.security.JwtUtil;
 import com.ironknee.Knee2KneelSpring.service.user.UserService;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -14,8 +17,16 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
-    public UserController(final UserService userService) {
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+
+    public UserController(final UserService userService, final AuthenticationManager authenticationManager,
+                          final JwtUtil jwtUtil, final PasswordEncoder passwordEncoder) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/register")
@@ -24,7 +35,7 @@ public class UserController {
     }
 
     @PostMapping("/logIn")
-    public ResponseObject<UserDTO> logIn(@RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseObject<String> logIn(@RequestBody UserLoginDTO userLoginDTO) {
         return userService.logIn(userLoginDTO);
     }
 
