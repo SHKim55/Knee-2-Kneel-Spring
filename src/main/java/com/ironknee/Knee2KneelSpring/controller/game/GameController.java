@@ -1,7 +1,7 @@
 package com.ironknee.Knee2KneelSpring.controller.game;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController("/api/game")
 public class GameController {
 }
