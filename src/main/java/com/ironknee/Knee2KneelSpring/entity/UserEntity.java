@@ -30,19 +30,24 @@ public class UserEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private MatchStatus matchStatus = MatchStatus.none;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long exp = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long level = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long rankPoint = 0L;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private UserRank userRank = UserRank.unranked;
 
 
