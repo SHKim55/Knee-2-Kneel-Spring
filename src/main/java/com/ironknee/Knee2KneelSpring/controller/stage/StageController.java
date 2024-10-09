@@ -1,7 +1,7 @@
 package com.ironknee.Knee2KneelSpring.controller.stage;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController("/api/stage")
 public class StageController {
 }
