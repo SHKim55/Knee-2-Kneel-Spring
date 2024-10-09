@@ -18,52 +18,68 @@ public class StatisticsEntity {
     private Long statisticsId;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long roundTotal = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long winTotal = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long loseTotal = 0L;
 
     @Column(nullable = false)
-    private Long winRateTotal = 0L;
+    @Builder.Default
+    private Double winRateTotal = 0.0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long roundStudent = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long winStudent = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long loseStudent = 0L;
 
     @Column(nullable = false)
-    private Long winRateStudent = 0L;
+    @Builder.Default
+    private Double winRateStudent = 0.0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long roundProfessor = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long winProfessor = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long loseProfessor = 0L;
 
     @Column(nullable = false)
-    private Long winRateProfessor = 0L;
+    @Builder.Default
+    private Double winRateProfessor = 0.0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long roundAssistant = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long winAssistant = 0L;
 
     @Column(nullable = false)
+    @Builder.Default
     private Long loseAssistant = 0L;
 
     @Column(nullable = false)
-    private Long winRateAssistant = 0L;
+    @Builder.Default
+    private Double winRateAssistant = 0.0;
 
 
     @OneToOne
