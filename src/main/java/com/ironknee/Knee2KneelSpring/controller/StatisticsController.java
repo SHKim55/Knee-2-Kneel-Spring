@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.controller.statistics;
+package com.ironknee.Knee2KneelSpring.controller;
 
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.statistics.StatisticsDTO;

@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.controller.user;
+package com.ironknee.Knee2KneelSpring.controller;
 
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.user.UserDTO;

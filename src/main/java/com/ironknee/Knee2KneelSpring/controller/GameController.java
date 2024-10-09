@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.controller.game;
+package com.ironknee.Knee2KneelSpring.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
