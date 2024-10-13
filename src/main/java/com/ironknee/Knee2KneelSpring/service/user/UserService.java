@@ -9,20 +9,16 @@ import com.ironknee.Knee2KneelSpring.entity.StatisticsEntity;
 import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.StatisticsRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
-import com.ironknee.Knee2KneelSpring.security.JwtUtil;
+import com.ironknee.Knee2KneelSpring.authentication.JwtUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -75,9 +71,6 @@ public class UserService {
                 .email(userRegisterDTO.getEmail())
                 .build();
 
-        System.out.println(userEntity.getNickname() + " " + userEntity.getPassword());
-        System.out.println(userEntity.getUserRank());
-
         UserEntity newUserEntity;
         try {
             newUserEntity = userRepository.save(userEntity);
@@ -107,8 +100,6 @@ public class UserService {
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             String jwt = jwtUtil.generateToken(userDetails.getUsername());
-
-            System.out.println("JWT Token : " + jwt);
 
             return new ResponseObject<>(ResponseCode.success.toString(), "success", jwt);
 
