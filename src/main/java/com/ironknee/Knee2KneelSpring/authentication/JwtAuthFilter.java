@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.security;
+package com.ironknee.Knee2KneelSpring.authentication;
 
 import com.ironknee.Knee2KneelSpring.service.user.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;

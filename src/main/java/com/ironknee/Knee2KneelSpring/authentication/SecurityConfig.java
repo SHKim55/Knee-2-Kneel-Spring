@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.security;
+package com.ironknee.Knee2KneelSpring.authentication;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +24,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(authz -> authz
+                .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/logIn").permitAll() // 회원가입 및 로그인 URL은 인증 없이 접근 가능
                         .requestMatchers("/api/user/register").permitAll()
                         .anyRequest().authenticated())
