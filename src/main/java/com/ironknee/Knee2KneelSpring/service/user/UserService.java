@@ -10,6 +10,7 @@ import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.StatisticsRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
 import com.ironknee.Knee2KneelSpring.authentication.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,6 +39,14 @@ public class UserService {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.statisticsRepository = statisticsRepository;
+    }
+
+    private UserEntity findUserByToken(String token) {
+        Claims claims = jwtUtil.extractTokenValue(token);
+        String email = claims.get("sub", String.class); // username(email) 추출
+
+        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(email);
+        return optionalUserEntity.orElse(null);
     }
 
     public static UserDTO convertEntityToDTO(final UserEntity userEntity) {
@@ -109,38 +118,28 @@ public class UserService {
         }
     }
 
-    public ResponseObject<UserDTO> getUserInfo(final UUID userId) {
-        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(userId);
+    public ResponseObject<UserDTO> getUserInfo(final String token) {
+        UserEntity userEntity = findUserByToken(token);
 
-        if(optionalUserEntity.isEmpty()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id",
-                    new UserDTO());
+        if(userEntity == null) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id", null);
         }
-        else {
-            UserEntity userEntity = optionalUserEntity.get();
-            UserDTO userDTO = convertEntityToDTO(userEntity);
-
-            return new ResponseObject<>(ResponseCode.success.toString(), "success", userDTO);
-        }
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", convertEntityToDTO(userEntity));
     }
 
     @Transactional
-    public ResponseObject<Boolean> signOut(final UUID userId) {
-        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(userId);
+    public ResponseObject<Boolean> signOut(final String token) {
+        try {
+            UserEntity userEntity = findUserByToken(token);
 
-        if(optionalUserEntity.isEmpty()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id", null);
-        }
-        else {
-            UserEntity userEntity = optionalUserEntity.get();
-
-            try {
-                userRepository.delete(userEntity);
-            } catch (Exception e) {
-                return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : Error deleting user info", null);
+            if(userEntity == null) {
+                return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No such user", null);
             }
 
+            userRepository.delete(userEntity);
             return new ResponseObject<>(ResponseCode.success.toString(), "success", true);
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : Error deleting user info", null);
         }
     }
 }

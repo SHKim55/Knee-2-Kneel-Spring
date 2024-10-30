@@ -7,8 +7,6 @@ import com.ironknee.Knee2KneelSpring.dto.user.UserRegisterDTO;
 import com.ironknee.Knee2KneelSpring.service.user.UserService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -29,10 +27,10 @@ public class UserController {
     }
 
     @GetMapping("/info")
-    public ResponseObject<UserDTO> getUserInfo(@RequestBody UUID userId) {
-        return userService.getUserInfo(userId);
+    public ResponseObject<UserDTO> getUserInfo(@RequestHeader(name = "Authorization") String token) {
+        return userService.getUserInfo(token);
     }
 
     @DeleteMapping("/signOut")
-    public ResponseObject<Boolean> signOut(@RequestBody UUID userId) { return userService.signOut(userId); }
+    public ResponseObject<Boolean> signOut(@RequestHeader(name = "Authorization") String token) { return userService.signOut(token); }
 }
