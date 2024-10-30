@@ -1,5 +1,6 @@
-package com.ironknee.Knee2KneelSpring.authentication;
+package com.ironknee.Knee2KneelSpring.configuration;
 
+import com.ironknee.Knee2KneelSpring.authentication.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

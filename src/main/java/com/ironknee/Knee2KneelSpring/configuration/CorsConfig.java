@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.authentication;
+package com.ironknee.Knee2KneelSpring.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
