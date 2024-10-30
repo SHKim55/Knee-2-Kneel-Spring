@@ -100,7 +100,7 @@ public class GameService {
     }
 
     private Game createGameObject(final Long gameId, final GameCreateDTO gameCreateDTO, final Player adminPlayer) {
-        return Game.builder()
+        Game newGame = Game.builder()
                 .gameId(gameId)
                 .maxPlayer(gameCreateDTO.getMaxPlayer())
                 .maxStudent(gameCreateDTO.getMaxStudent())
@@ -109,7 +109,11 @@ public class GameService {
 //                .studentList(new ArrayList<>())
 //                .assistantList(new ArrayList<>())
                 .playerList(new ArrayList<>())
+                .isPlaying(false)
                 .build();
+
+        newGame.getPlayerList().add(adminPlayer);
+        return newGame;
     }
 
     // * Static Methods
