@@ -95,10 +95,6 @@ public class GameService {
             return null;
         } else {
             Map<String, Object> playerMap = new HashMap<>();
-
-            System.out.println("currentPlayerIndex : " + currentPlayerIndex);
-            System.out.println("currentPlayer : " + currentPlayer.getUserEmail());
-
             playerMap.put("index", currentPlayerIndex);
             playerMap.put("player", currentPlayer);
             return playerMap;
@@ -108,6 +104,8 @@ public class GameService {
     private Game createGameObject(final Long gameId, final GameCreateDTO gameCreateDTO, final Player adminPlayer) {
         Game newGame = Game.builder()
                 .gameId(gameId)
+                .roomName(gameCreateDTO.getRoomName())
+                .mapName(gameCreateDTO.getMapName())
                 .maxPlayer(gameCreateDTO.getMaxPlayer())
                 .maxStudent(gameCreateDTO.getMaxStudent())
                 .maxAssistant(gameCreateDTO.getMaxAssistant())
@@ -126,6 +124,8 @@ public class GameService {
     public static GameDTO convertEntityToDTO(final Game game) {
         return GameDTO.builder()
                 .gameId(game.getGameId())
+                .roomName(game.getRoomName())
+                .mapName(game.getMapName())
                 .maxPlayer(game.getMaxPlayer())
                 .maxStudent(game.getMaxStudent())
                 .maxAssistant(game.getMaxAssistant())
@@ -249,9 +249,8 @@ public class GameService {
 
     // 방장 변경
     @Transactional
-    public ResponseObject<GameDTO> changeAdmin(Long gameId, String stringId) {
-        UUID userId = UUID.fromString(stringId);
-        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(userId);
+    public ResponseObject<GameDTO> changeAdmin(Long gameId, String userEmail) {
+        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(userEmail);
         if(optionalUserEntity.isEmpty()) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such user id", null);
         }
@@ -271,7 +270,7 @@ public class GameService {
             if(playerList.get(i).getIsAdmin()) {
                 previousAdmin = playerList.get(i);
                 previousAdminIndex = i;
-            } else if(playerList.get(i).getUserId() == userId) {
+            } else if(playerList.get(i).getUserEmail().equals(userEmail)) {
                 newAdmin = playerList.get(i);
                 newAdminIndex = i;
             }
@@ -282,7 +281,7 @@ public class GameService {
         }
 
         previousAdmin.setIsAdmin(false);
-        newAdmin.setIsReady(true);
+        newAdmin.setIsAdmin(true);
         playerList.set(previousAdminIndex, previousAdmin);
         playerList.set(newAdminIndex, newAdmin);
 
@@ -305,10 +304,6 @@ public class GameService {
     // 역할 변경
     public ResponseObject<GameDTO> changeRole(String token, Long gameId, PlayerRole playerRoleToChange) {
         UserEntity userEntity = findUserByToken(token);
-
-        System.out.println(userEntity.getNickname());
-
-        System.out.println(gameId);
         Map<String, Object> gameMap = findGameByGameId(gameId);
 
         Game currentGame = (Game) gameMap.get("game");
@@ -400,6 +395,7 @@ public class GameService {
         // 게임방에 아무도 남아있지 않는 경우 (게임방 삭제)
         if(playerList.isEmpty()) {
             gameList.remove(currentGameIndex);
+            return new ResponseObject<>(ResponseCode.success.toString(), "empty room has been deleted successfully", null);
         } else {
             try {
                 for(Player player : playerList)
@@ -477,7 +473,10 @@ public class GameService {
 
         // 플레이어 상태 변경 - 게임중
         for(Player player : playerList) {
-            UserEntity userEntity = findUserByToken(player.getUserEmail());
+            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(player.getUserEmail());
+            if(optionalUserEntity.isEmpty()) return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such email - " + player.getUserEmail(), null);
+
+            UserEntity userEntity = optionalUserEntity.get();
             userEntity.setMatchStatus(MatchStatus.playing);
             userRepository.save(userEntity);
         }
@@ -494,8 +493,12 @@ public class GameService {
         List<Player> playerList = currentGame.getPlayerList();
 
         for(Player player : playerList) {
-            UserEntity userEntity = findUserByToken(player.getUserEmail());
-            userEntity.setMatchStatus(MatchStatus.none);
+            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(player.getUserEmail());
+            if(optionalUserEntity.isEmpty())
+                return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid player information", null);
+
+            UserEntity userEntity = optionalUserEntity.get();
+            userEntity.setMatchStatus(MatchStatus.matched);
             userRepository.save(userEntity);
         }
 
