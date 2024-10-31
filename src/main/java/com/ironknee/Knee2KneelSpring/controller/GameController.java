@@ -45,8 +45,8 @@ public class GameController {
     // 방장 권한 부여
     // 방 생성자가 아닌 다른 사용자에게 방장 권한 부여
     @PostMapping("/modify/{gameId}/admin")
-    public ResponseObject<GameDTO> changeAdmin(@PathVariable Long gameId, @RequestBody String userId) {
-        return gameService.changeAdmin(gameId, userId);
+    public ResponseObject<GameDTO> changeAdmin(@PathVariable Long gameId, @RequestBody String userEmail) {
+        return gameService.changeAdmin(gameId, userEmail);
     }
 
     // 역할 변경

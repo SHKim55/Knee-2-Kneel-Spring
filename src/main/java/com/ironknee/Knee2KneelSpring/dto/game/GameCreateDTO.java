@@ -7,6 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GameCreateDTO {
+    private String roomName;
+    private String mapName;
     private Long maxPlayer;
     private Long maxStudent;
     private Long maxAssistant;
