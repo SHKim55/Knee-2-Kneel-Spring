@@ -14,8 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class GameDTO {
     private Long gameId;
-    private String roomName;
-    private String mapName;
+    private String roomName = "New Normal Game";
+    private String mapName = "Computer Science";
     private Long maxPlayer;
     private Long maxStudent;
     private Long maxAssistant;
