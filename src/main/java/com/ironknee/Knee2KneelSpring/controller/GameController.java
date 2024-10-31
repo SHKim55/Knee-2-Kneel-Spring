@@ -45,7 +45,7 @@ public class GameController {
     // 방장 권한 부여
     // 방 생성자가 아닌 다른 사용자에게 방장 권한 부여
     @PostMapping("/modify/{gameId}/admin")
-    public ResponseObject<GameDTO> changeAdmin(@PathVariable Long gameId, @RequestBody UUID userId) {
+    public ResponseObject<GameDTO> changeAdmin(@PathVariable Long gameId, @RequestBody String userId) {
         return gameService.changeAdmin(gameId, userId);
     }
 
@@ -53,7 +53,7 @@ public class GameController {
     // 플레이어가 랜덤하게 지정된 초기 역할에서 자신이 맡고자 하는 역할로 변경 (교수는 1명으로 제한)
     @PostMapping("/modify/{gameId}/role/{role}")
     public ResponseObject<GameDTO> changeRole(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
-                                              @RequestParam PlayerRole role) {
+                                              @PathVariable PlayerRole role) {
         return gameService.changeRole(token, gameId, role);
     }
 
@@ -69,9 +69,8 @@ public class GameController {
     // 플레이어 대기완료 상태 부여
     // 각 플레이어의 대기완료 여부 변경
     @PostMapping("/modify/{gameId}/ready")
-    public ResponseObject<GameDTO> changeReadiness(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
-                                                   @RequestBody Boolean isReady) {
-        return gameService.changeReadiness(token, gameId, isReady);
+    public ResponseObject<GameDTO> changeReadiness(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId) {
+        return gameService.changeReadiness(token, gameId);
     }
 
     // 대기방 나가기

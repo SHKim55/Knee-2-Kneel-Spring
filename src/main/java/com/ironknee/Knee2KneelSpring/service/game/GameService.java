@@ -19,6 +19,7 @@ import com.ironknee.Knee2KneelSpring.service.user.UserService;
 import com.ironknee.Knee2KneelSpring.websocket.GameWebSocketHandler;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
+import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -74,6 +75,7 @@ public class GameService {
             Map<String, Object> gameMap = new HashMap<>();
             gameMap.put("index", currentIndex);
             gameMap.put("game", currentGame);
+
             return gameMap;
         }
     }
@@ -82,7 +84,7 @@ public class GameService {
         Player currentPlayer = null;
         int currentPlayerIndex = 0;
         for(int i = 0; i < playerList.size(); i++) {
-            if(playerList.get(i).getUserId() == playerId) {
+            if(playerList.get(i).getUserId().equals(playerId)) {
                 currentPlayer = playerList.get(i);
                 currentPlayerIndex = i;
                 break;
@@ -93,6 +95,10 @@ public class GameService {
             return null;
         } else {
             Map<String, Object> playerMap = new HashMap<>();
+
+            System.out.println("currentPlayerIndex : " + currentPlayerIndex);
+            System.out.println("currentPlayer : " + currentPlayer.getUserEmail());
+
             playerMap.put("index", currentPlayerIndex);
             playerMap.put("player", currentPlayer);
             return playerMap;
@@ -243,7 +249,8 @@ public class GameService {
 
     // 방장 변경
     @Transactional
-    public ResponseObject<GameDTO> changeAdmin(Long gameId, UUID userId) {
+    public ResponseObject<GameDTO> changeAdmin(Long gameId, String stringId) {
+        UUID userId = UUID.fromString(stringId);
         Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(userId);
         if(optionalUserEntity.isEmpty()) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such user id", null);
@@ -298,7 +305,12 @@ public class GameService {
     // 역할 변경
     public ResponseObject<GameDTO> changeRole(String token, Long gameId, PlayerRole playerRoleToChange) {
         UserEntity userEntity = findUserByToken(token);
+
+        System.out.println(userEntity.getNickname());
+
+        System.out.println(gameId);
         Map<String, Object> gameMap = findGameByGameId(gameId);
+
         Game currentGame = (Game) gameMap.get("game");
         int currentGameIndex = (int) gameMap.get("index");
 
@@ -326,16 +338,17 @@ public class GameService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
         }
 
-        return new ResponseObject<>(ResponseCode.fail.toString(), "success", currentGameDTO);
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
     // AI 플레이어 변경 (추후 개발)
 
 
     // 플레이어 대기상태 변경
-    public ResponseObject<GameDTO> changeReadiness(String token, Long gameId, Boolean isReady) {
+    public ResponseObject<GameDTO> changeReadiness(String token, Long gameId) {
         UserEntity userEntity = findUserByToken(token);
         Map<String, Object> gameMap = findGameByGameId(gameId);
+
         Game currentGame = (Game) gameMap.get("game");
         int currentGameIndex = (int) gameMap.get("index");
 
@@ -348,7 +361,7 @@ public class GameService {
         if(currentPlayer == null)
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : no player having such player id in game", null);
 
-        currentPlayer.setIsReady(!isReady);
+        currentPlayer.setIsReady(!currentPlayer.getIsReady());
         playerList.set(currentPlayerIndex, currentPlayer);
         currentGame.setPlayerList(playerList);
         gameList.set(currentGameIndex, currentGame);
@@ -363,7 +376,7 @@ public class GameService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
         }
 
-        return new ResponseObject<>(ResponseCode.fail.toString(), "success", currentGameDTO);
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
     // 플레이어 삭제 (나가기)
@@ -400,7 +413,7 @@ public class GameService {
         userEntity.setMatchStatus(MatchStatus.none);
         userRepository.save(userEntity);
 
-        return new ResponseObject<>(ResponseCode.fail.toString(), "success", currentGameDTO);
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
     // 게임 시작
