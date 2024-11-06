@@ -1,7 +1,7 @@
 package com.ironknee.Knee2KneelSpring.entity;
 
-import com.ironknee.Knee2KneelSpring.service.stage.StageDepartment;
-import com.ironknee.Knee2KneelSpring.service.stage.StageDifficulty;
+import com.ironknee.Knee2KneelSpring.service.stage_unused.StageDepartment;
+import com.ironknee.Knee2KneelSpring.service.stage_unused.StageDifficulty;
 import jakarta.persistence.*;
 import lombok.*;
 
