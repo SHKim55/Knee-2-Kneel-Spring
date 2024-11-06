@@ -7,6 +7,7 @@ import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
 import com.ironknee.Knee2KneelSpring.service.game.GameService;
 import com.ironknee.Knee2KneelSpring.service.player.PlayerRole;
 import com.ironknee.Knee2KneelSpring.service.statistics.StatisticsService;
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -71,6 +72,28 @@ public class GameController {
     @PostMapping("/modify/{gameId}/ready")
     public ResponseObject<GameDTO> changeReadiness(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId) {
         return gameService.changeReadiness(token, gameId);
+    }
+
+    // 게임 맵 변경
+    // 플레이어들이 게임을 진행할 맵 변경
+    @PostMapping("/modify/{gameId}/map/{mapName}")
+    public ResponseObject<GameDTO> changeMap(@PathVariable(name = "gameId") Long gameId, @PathVariable(name = "mapName") String mapName) {
+        return gameService.changeMap(gameId, mapName);
+    }
+
+    // 게임 난이도 변경
+    // 하(1), 중(2), 상(3) 중 하나로 게임 난이도 설정
+    @PostMapping("/modify/{gameId}/difficulty/{difficulty}")
+    public ResponseObject<GameDTO> changeDifficulty(@PathVariable(name = "gameId") Long gameId, @PathVariable(name = "difficulty") Long difficulty) {
+        return gameService.changeDifficulty(gameId, difficulty);
+    }
+
+    // 최대 인원 수 변경
+    // 게임 최대 인원 수 확대 or 축소 (축소는 현재 인원수보다 크거나 같은 범위만 가능)
+    @PostMapping("/modify/{gameId}/maxPlayer/{maxPlayer}")
+    public ResponseObject<GameDTO> changeMaxPlayer(@PathVariable(name = "gameId") Long gameId,
+                                                   @PathVariable(name = "maxPlayer") Long maxPlayer) {
+        return gameService.changeMaxPlayer(gameId, maxPlayer);
     }
 
     // 대기방 나가기

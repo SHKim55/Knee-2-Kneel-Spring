@@ -19,15 +19,19 @@ public class GameDTO {
     @Builder.Default
     private String mapName = "Computer Science";
     private Long maxPlayer;
-    private Long maxStudent;
-    private Long maxAssistant;
+    @Builder.Default
+    private Long difficulty = 1L;
 
-//    private Player professor;
-//    private List<Player> studentList;
-//    private List<Player> assistantList;
     private List<Player> playerList;
 
     private Boolean isPlaying;
 
+
+// unused field
+//    private Player professor;
+//    private Long maxStudent;
+//    private Long maxAssistant;
+//    private List<Player> studentList;
+//    private List<Player> assistantList;
 //    private StageEntity stageEntity;
 }
