@@ -107,13 +107,14 @@ public class GameService {
                 .roomName(gameCreateDTO.getRoomName())
                 .mapName(gameCreateDTO.getMapName())
                 .maxPlayer(gameCreateDTO.getMaxPlayer())
-                .maxStudent(gameCreateDTO.getMaxStudent())
-                .maxAssistant(gameCreateDTO.getMaxAssistant())
-            //  .stageEntity(gameCreateDTO.getStageEntity())
-//                .studentList(new ArrayList<>())
-//                .assistantList(new ArrayList<>())
+                .difficulty(1L)  // Default 난이도 (하)
                 .playerList(new ArrayList<>())
                 .isPlaying(false)
+//                .maxStudent(gameCreateDTO.getMaxStudent())
+//                .maxAssistant(gameCreateDTO.getMaxAssistant())
+//                .stageEntity(gameCreateDTO.getStageEntity())
+//                .studentList(new ArrayList<>())
+//                .assistantList(new ArrayList<>())
                 .build();
 
         newGame.getPlayerList().add(adminPlayer);
@@ -127,13 +128,14 @@ public class GameService {
                 .roomName(game.getRoomName())
                 .mapName(game.getMapName())
                 .maxPlayer(game.getMaxPlayer())
-                .maxStudent(game.getMaxStudent())
-                .maxAssistant(game.getMaxAssistant())
+                .difficulty(game.getDifficulty())
+                .playerList(game.getPlayerList())
+                .isPlaying(game.getIsPlaying())
+//                .maxStudent(game.getMaxStudent())
+//                .maxAssistant(game.getMaxAssistant())
 //                .professor(game.getProfessor())
 //                .studentList(game.getStudentList())
 //                .assistantList(game.getAssistantList())
-                .playerList(game.getPlayerList())
-                .isPlaying(game.getIsPlaying())
                 .build();
     }
 
@@ -151,7 +153,11 @@ public class GameService {
             adminPlayer = Player.builder()
                     .userId(userEntity.getUserId())
                     .userEmail(userEntity.getEmail())
-                    .playerRole(Player.getRandomRole())
+                    .userNickname(userEntity.getNickname())
+                    .level(userEntity.getLevel())
+                    .userRank(userEntity.getUserRank())
+                    .rankPoint(userEntity.getRankPoint())
+                    .playerRole(PlayerRole.professor)
                     .isAdmin(true)
                     .isReady(false)
                     .build();
@@ -202,13 +208,6 @@ public class GameService {
     public ResponseObject<GameDTO> enterGame(final String token, final Long gameId) {
         UserEntity userEntity = findUserByToken(token);
         UserDTO userDTO = UserService.convertEntityToDTO(userEntity);
-        Player currentPlayer = Player.builder()
-                .userId(userDTO.getUserId())
-                .userEmail(userDTO.getEmail())
-                .playerRole(Player.getRandomRole())
-                .isAdmin(false)
-                .isReady(false)
-                .build();
 
         if(userEntity.getMatchStatus() != MatchStatus.none) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The player is matched with another game or still playing", null);
@@ -223,8 +222,20 @@ public class GameService {
         } else if(gameToEnter.getIsPlaying()) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
         } else if(gameToEnter.getPlayerList().size() >= gameToEnter.getMaxPlayer()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already full", null);
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game room selected is already full", null);
         }
+
+        Player currentPlayer = Player.builder()
+                .userId(userDTO.getUserId())
+                .userEmail(userDTO.getEmail())
+                .userNickname(userDTO.getNickname())
+                .level(userDTO.getLevel())
+                .userRank(userDTO.getUserRank())
+                .rankPoint(userDTO.getRankPoint())
+                .playerRole(Player.grantPlayerRole(gameToEnter))
+                .isAdmin(false)
+                .isReady(false)
+                .build();
 
         List<Player> currentPlayerList = gameToEnter.getPlayerList();
         currentPlayerList.add(currentPlayer);
@@ -374,6 +385,108 @@ public class GameService {
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
+    // 맵 변경
+    public ResponseObject<GameDTO> changeMap(Long gameId, String mapName) {
+        Game currentGame;
+        List<Player> playerList;
+        try {
+            Map<String, Object> gameMap = findGameByGameId(gameId);
+
+            currentGame = (Game) gameMap.get("game");
+            playerList = currentGame.getPlayerList();
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
+        }
+
+        GameDTO currentGameDTO;
+        try {
+            currentGame.setMapName(mapName);
+            currentGameDTO = convertEntityToDTO(currentGame);
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid map name", null);
+        }
+
+        try {
+            for(Player player : playerList)
+                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
+        }
+
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 맵 변경
+    public ResponseObject<GameDTO> changeDifficulty(Long gameId, Long difficulty) {
+        Game currentGame;
+        List<Player> playerList;
+        try {
+            Map<String, Object> gameMap = findGameByGameId(gameId);
+
+            currentGame = (Game) gameMap.get("game");
+            playerList = currentGame.getPlayerList();
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
+        }
+
+        GameDTO currentGameDTO;
+        try {
+            if(difficulty < 1 || difficulty > 3)
+                throw new Exception();
+
+            currentGame.setDifficulty(difficulty);
+            currentGameDTO = convertEntityToDTO(currentGame);
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
+        }
+
+        try {
+            for(Player player : playerList)
+                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
+        }
+
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 최대 플레이어 수 변경
+    public ResponseObject<GameDTO> changeMaxPlayer(Long gameId, Long maxPlayer) {
+        Game currentGame;
+        List<Player> playerList;
+        try {
+            Map<String, Object> gameMap = findGameByGameId(gameId);
+
+            currentGame = (Game) gameMap.get("game");
+            playerList = currentGame.getPlayerList();
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
+        }
+
+        GameDTO currentGameDTO;
+        try {
+            if(maxPlayer < playerList.size() || maxPlayer > 10)
+                throw new Exception();
+
+            currentGame.setMaxPlayer(maxPlayer);
+            currentGameDTO = convertEntityToDTO(currentGame);
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
+        }
+
+        try {
+            for(Player player : playerList)
+                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
+        }
+
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
     // 플레이어 삭제 (나가기)
     @Transactional
     public ResponseObject<GameDTO> exitGame(String token, Long gameId) {
@@ -421,9 +534,14 @@ public class GameService {
         List<Player> playerList = currentGame.getPlayerList();
 
         // 게임 시작을 위한 조건 검사 (팀 구성, 플레이어 준비 여부)
-        int countProfessor = 0, countStudent = 0, countAssistant = 0;
+        int countProfessor = 0;
         Boolean isNotReady = false;
-        Boolean hasTooManyProfessor = false, hasTooManyStudent = false, hasTooManyAssistant = false;
+        Boolean hasTooManyProfessor = false;
+
+        if (playerList.size() > currentGame.getMaxPlayer()) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : This game has too many players", null);
+        }
+
         for(Player player : playerList) {
             if(!player.getIsReady()) {
                 isNotReady = true;
@@ -436,18 +554,6 @@ public class GameService {
                     hasTooManyProfessor = true;
                     break;
                 }
-            } else if(player.getPlayerRole() == PlayerRole.student) {
-                countStudent++;
-                if(countStudent > currentGame.getMaxStudent()) {
-                    hasTooManyStudent = true;
-                    break;
-                }
-            } else if(player.getPlayerRole() == PlayerRole.assistant) {
-                countAssistant++;
-                if(countAssistant > currentGame.getMaxAssistant()) {
-                    hasTooManyAssistant = true;
-                    break;
-                }
             }
         }
 
@@ -455,12 +561,9 @@ public class GameService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Not all players are ready", null);
         } else if(hasTooManyProfessor) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The number of professor should be 1", null);
-        } else if(hasTooManyStudent) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The number of students should be " + currentGame.getMaxStudent(), null);
-        } else if(hasTooManyAssistant) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The number of assistants should be " + currentGame.getMaxAssistant(), null);
         }
 
+        currentGame.setIsPlaying(true);
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
         try {
