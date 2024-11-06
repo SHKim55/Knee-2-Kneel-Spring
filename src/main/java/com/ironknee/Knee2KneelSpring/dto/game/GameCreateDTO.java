@@ -10,8 +10,4 @@ public class GameCreateDTO {
     private String roomName;
     private String mapName;
     private Long maxPlayer;
-    private Long maxStudent;
-    private Long maxAssistant;
-
-//    private StageEntity stageEntity;
 }
