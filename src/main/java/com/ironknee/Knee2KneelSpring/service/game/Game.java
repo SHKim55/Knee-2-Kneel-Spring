@@ -18,15 +18,17 @@ public class Game {
     @Builder.Default
     private String mapName = "Computer Science";
     private Long maxPlayer;
-    private Long maxStudent;
-    private Long maxAssistant;
+    @Builder.Default
+    private Long difficulty = 1L;
 
-//    private Player professor;
-//    private List<Player> studentList = new ArrayList<>();
-//    private List<Player> assistantList = new ArrayList<>();
     private List<Player> playerList = new ArrayList<>();
-
     private Boolean isPlaying = false;
 
+// unused field
+//    private Player professor;
+//    private Long maxStudent;
+//    private Long maxAssistant;
+//    private List<Player> studentList;
+//    private List<Player> assistantList;
 //    private StageEntity stageEntity;
 }
