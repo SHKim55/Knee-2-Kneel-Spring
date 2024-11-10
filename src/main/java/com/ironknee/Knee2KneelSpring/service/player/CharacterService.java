@@ -6,11 +6,11 @@ import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.player.CharacterCreateDTO;
 import com.ironknee.Knee2KneelSpring.dto.player.CharacterDTO;
 import com.ironknee.Knee2KneelSpring.entity.CharacterEntity;
-import com.ironknee.Knee2KneelSpring.entity.SkillEntity;
 import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.CharacterRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
 import io.jsonwebtoken.Claims;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -47,6 +47,7 @@ public class CharacterService {
                 .build();
     }
 
+    @Transactional
     public ResponseObject<CharacterDTO> createCharacter(final CharacterCreateDTO characterCreateDTO) {
         try {
             CharacterEntity characterEntity = CharacterEntity.builder()
@@ -91,6 +92,7 @@ public class CharacterService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> grantCharacter(final String token, final Long characterNum) {
         if(!characterRepository.existsByCharacterNum(characterNum))
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No character having such character number", null);
@@ -115,6 +117,7 @@ public class CharacterService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> revokeCharacter(final String token, final Long characterNum) {
         if(!characterRepository.existsByCharacterNum(characterNum))
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No character having such character number", null);
@@ -139,6 +142,7 @@ public class CharacterService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> deleteCharacter(final Long characterId) {
         try {
             Optional<CharacterEntity> optionalCharacterEntity = characterRepository.findCharacterEntityByCharacterId(characterId);
