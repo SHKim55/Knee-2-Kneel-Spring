@@ -35,21 +35,21 @@ public class CharacterController {
     // 유저 캐릭터 검색
     // 특정 유저에게 부여된 캐릭터 목록을 반환함
     @GetMapping("/search/user")
-    public ResponseObject<List<CharacterDTO>> searchUserCharacters(@RequestHeader("Authorization") String token) {
+    public ResponseObject<List<CharacterDTO>> searchUserCharacters(@RequestHeader(name = "Authorization") String token) {
         return characterService.searchUserCharacters(token);
     }
 
     // 캐릭터 부여
     // 새로운 캐릭터를 특정 유저에게 부여함 (unlock)
     @PostMapping("/grant/{characterNum}")
-    public ResponseObject<Boolean> grantCharacter(@RequestHeader("Authorization") String token, @PathVariable Long characterNum) {
+    public ResponseObject<Boolean> grantCharacter(@RequestHeader(name = "Authorization") String token, @PathVariable Long characterNum) {
         return characterService.grantCharacter(token, characterNum);
     }
 
     // 캐릭터 부여 해제
     // 특정 유저에게 부여한 캐릭터를 접근 해제함
     @PostMapping("/revoke/{characterNum}")
-    public ResponseObject<Boolean> revokeCharacter(@RequestHeader("Authorization") String token, @PathVariable Long characterNum) {
+    public ResponseObject<Boolean> revokeCharacter(@RequestHeader(name = "Authorization") String token, @PathVariable Long characterNum) {
         return characterService.revokeCharacter(token, characterNum);
     }
 
