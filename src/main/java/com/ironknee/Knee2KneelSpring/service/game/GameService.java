@@ -9,7 +9,11 @@ import com.ironknee.Knee2KneelSpring.dto.game.GameCreateDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
 import com.ironknee.Knee2KneelSpring.dto.user.UserDTO;
+import com.ironknee.Knee2KneelSpring.entity.CharacterEntity;
+import com.ironknee.Knee2KneelSpring.entity.SkillEntity;
 import com.ironknee.Knee2KneelSpring.entity.UserEntity;
+import com.ironknee.Knee2KneelSpring.repository.CharacterRepository;
+import com.ironknee.Knee2KneelSpring.repository.SkillRepository;
 import com.ironknee.Knee2KneelSpring.repository.StatisticsRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
 import com.ironknee.Knee2KneelSpring.service.player.Player;
@@ -19,7 +23,6 @@ import com.ironknee.Knee2KneelSpring.service.user.UserService;
 import com.ironknee.Knee2KneelSpring.websocket.GameWebSocketHandler;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
-import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,15 +31,20 @@ import java.util.*;
 public class GameService {
     private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
+    private final SkillRepository skillRepository;
+    private final CharacterRepository characterRepository;
     private final GameWebSocketHandler gameWebSocketHandler;
     private final JwtUtil jwtUtil;
 
     private final ArrayList<Game> gameList = new ArrayList<>();
 
     public GameService(final UserRepository userRepository, final StatisticsRepository statisticsRepository,
+                       final SkillRepository skillRepository, final CharacterRepository characterRepository,
                        final GameWebSocketHandler gameWebSocketHandler, final JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.statisticsRepository = statisticsRepository;
+        this.skillRepository = skillRepository;
+        this.characterRepository = characterRepository;
         this.gameWebSocketHandler = gameWebSocketHandler;
         this.jwtUtil = jwtUtil;
     }
@@ -110,11 +118,6 @@ public class GameService {
                 .difficulty(1L)  // Default 난이도 (하)
                 .playerList(new ArrayList<>())
                 .isPlaying(false)
-//                .maxStudent(gameCreateDTO.getMaxStudent())
-//                .maxAssistant(gameCreateDTO.getMaxAssistant())
-//                .stageEntity(gameCreateDTO.getStageEntity())
-//                .studentList(new ArrayList<>())
-//                .assistantList(new ArrayList<>())
                 .build();
 
         newGame.getPlayerList().add(adminPlayer);
@@ -131,11 +134,6 @@ public class GameService {
                 .difficulty(game.getDifficulty())
                 .playerList(game.getPlayerList())
                 .isPlaying(game.getIsPlaying())
-//                .maxStudent(game.getMaxStudent())
-//                .maxAssistant(game.getMaxAssistant())
-//                .professor(game.getProfessor())
-//                .studentList(game.getStudentList())
-//                .assistantList(game.getAssistantList())
                 .build();
     }
 
@@ -160,6 +158,8 @@ public class GameService {
                     .playerRole(PlayerRole.professor)
                     .isAdmin(true)
                     .isReady(false)
+                    .skillNumList(new ArrayList<>())   // 장착 스킬 없음
+                    .characterNum(0L)                  // Default Character
                     .build();
 
         } catch (Exception e) {
@@ -235,6 +235,8 @@ public class GameService {
                 .playerRole(Player.grantPlayerRole(gameToEnter))
                 .isAdmin(false)
                 .isReady(false)
+                .skillNumList(new ArrayList<>())
+                .characterNum(0L)
                 .build();
 
         List<Player> currentPlayerList = gameToEnter.getPlayerList();
@@ -330,6 +332,95 @@ public class GameService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No player having such player id in game", null);
 
         currentPlayer.setPlayerRole(playerRoleToChange);
+        playerList.set(currentPlayerIndex, currentPlayer);
+        currentGame.setPlayerList(playerList);
+        gameList.set(currentGameIndex, currentGame);
+
+        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
+
+        try {
+            for(Player player : playerList)
+                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
+        }
+
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 플레이어 스킬 리스트 변경
+    public ResponseObject<GameDTO> changeSkill(String token, Long gameId, List<Long> skillNumList) {
+        UserEntity userEntity = findUserByToken(token);
+        Map<String, Object> gameMap = findGameByGameId(gameId);
+
+        Game currentGame = (Game) gameMap.get("game");
+        int currentGameIndex = (int) gameMap.get("index");
+
+        List<Player> playerList = currentGame.getPlayerList();
+
+        Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
+        Player currentPlayer = (Player) playerMap.get("player");
+        int currentPlayerIndex = (int) playerMap.get("index");
+
+        if(currentPlayer == null)
+            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No player having such player id in game", null);
+
+        try {
+            if(skillNumList.size() > 3)
+                throw new IndexOutOfBoundsException();
+
+            for(Long skillNum : skillNumList) {
+                Optional<SkillEntity> optionalSkillEntity = skillRepository.findSkillEntityBySkillNum(skillNum);
+                if(optionalSkillEntity.isEmpty() || !userEntity.getSkills().contains(optionalSkillEntity.get()))
+                    throw new Exception();
+            }
+        } catch (IndexOutOfBoundsException i) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : The length of skill list must be less or equal to 3", null);
+        } catch (Exception e) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : Skill having such skill number doesn't exist or not able to access", null);
+        }
+
+        currentPlayer.setSkillNumList(skillNumList);
+        playerList.set(currentPlayerIndex, currentPlayer);
+        currentGame.setPlayerList(playerList);
+        gameList.set(currentGameIndex, currentGame);
+
+        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
+
+        try {
+            for(Player player : playerList)
+                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
+        }
+
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 플레이어 컨셉 캐릭터 변경
+    public ResponseObject<GameDTO> changeCharacter(String token, Long gameId, Long characterNum) {
+        UserEntity userEntity = findUserByToken(token);
+        Map<String, Object> gameMap = findGameByGameId(gameId);
+
+        Game currentGame = (Game) gameMap.get("game");
+        int currentGameIndex = (int) gameMap.get("index");
+
+        List<Player> playerList = currentGame.getPlayerList();
+
+        Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
+        Player currentPlayer = (Player) playerMap.get("player");
+        int currentPlayerIndex = (int) playerMap.get("index");
+
+        if(currentPlayer == null)
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No player having such player id in game", null);
+
+        Optional<CharacterEntity> optionalCharacterEntity = characterRepository.findCharacterEntityByCharacterNum(characterNum);
+        if(optionalCharacterEntity.isEmpty() || !userEntity.getCharacters().contains(optionalCharacterEntity.get()))
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Character having such character id doesn't exist or not able to access", null);
+
+        currentPlayer.setCharacterNum(characterNum);
         playerList.set(currentPlayerIndex, currentPlayer);
         currentGame.setPlayerList(playerList);
         gameList.set(currentGameIndex, currentGame);
@@ -623,7 +714,6 @@ public class GameService {
             for(Player player : playerList)
                 gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
         } catch (Exception e) {
-            e.printStackTrace();
             return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
         }
 
