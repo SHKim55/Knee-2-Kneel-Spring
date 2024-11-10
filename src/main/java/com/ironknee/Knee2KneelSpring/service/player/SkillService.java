@@ -10,6 +10,7 @@ import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.SkillRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
 import io.jsonwebtoken.Claims;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class SkillService {
                 .build();
     }
 
+    @Transactional
     public ResponseObject<SkillDTO> createSkill(final SkillCreateDTO skillCreateDTO) {
         try {
             SkillEntity skillEntity = SkillEntity.builder()
@@ -88,6 +90,7 @@ public class SkillService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> grantSkill(final String token, final Long skillNum) {
         if(!skillRepository.existsBySkillNum(skillNum))
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No skill having such skill number", null);
@@ -113,6 +116,7 @@ public class SkillService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> revokeSkill(final String token, final Long skillNum) {
         if(!skillRepository.existsBySkillNum(skillNum))
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No skill having such skill number", null);
@@ -137,6 +141,7 @@ public class SkillService {
         }
     }
 
+    @Transactional
     public ResponseObject<Boolean> deleteSkill(final Long skillId) {
         try {
             Optional<SkillEntity> optionalSkillEntity = skillRepository.findSkillEntityBySkillId(skillId);
