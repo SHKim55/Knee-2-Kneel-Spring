@@ -1,6 +1,5 @@
 package com.ironknee.Knee2KneelSpring.dto.stage;
 
-import com.ironknee.Knee2KneelSpring.entity.GameEntity;
 import com.ironknee.Knee2KneelSpring.service.stage_unused.StageDepartment;
 import com.ironknee.Knee2KneelSpring.service.stage_unused.StageDifficulty;
 import jakarta.persistence.EnumType;
@@ -22,5 +21,4 @@ public class StageDTO {
     private StageDepartment department;
     @Enumerated(EnumType.STRING)
     private StageDifficulty difficulty;
-    private List<GameEntity> gameEntityList;
 }
