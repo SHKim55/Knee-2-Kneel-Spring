@@ -5,6 +5,7 @@ import com.ironknee.Knee2KneelSpring.service.user.UserRank;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -51,8 +52,11 @@ public class UserEntity {
     private UserRank userRank = UserRank.unranked;
 
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PlayerEntity player;
+    @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    private List<SkillEntity> skills;
+
+    @ManyToMany(mappedBy = "users", cascade = CascadeType.ALL)
+    private List<CharacterEntity> characters;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private StatisticsEntity statistics;
