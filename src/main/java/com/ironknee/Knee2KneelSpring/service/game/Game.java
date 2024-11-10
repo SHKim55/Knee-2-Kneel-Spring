@@ -23,12 +23,4 @@ public class Game {
 
     private List<Player> playerList = new ArrayList<>();
     private Boolean isPlaying = false;
-
-// unused field
-//    private Player professor;
-//    private Long maxStudent;
-//    private Long maxAssistant;
-//    private List<Player> studentList;
-//    private List<Player> assistantList;
-//    private StageEntity stageEntity;
 }

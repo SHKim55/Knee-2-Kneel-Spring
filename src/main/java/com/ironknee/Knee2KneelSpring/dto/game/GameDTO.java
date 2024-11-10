@@ -25,13 +25,4 @@ public class GameDTO {
     private List<Player> playerList;
 
     private Boolean isPlaying;
-
-
-// unused field
-//    private Player professor;
-//    private Long maxStudent;
-//    private Long maxAssistant;
-//    private List<Player> studentList;
-//    private List<Player> assistantList;
-//    private StageEntity stageEntity;
 }

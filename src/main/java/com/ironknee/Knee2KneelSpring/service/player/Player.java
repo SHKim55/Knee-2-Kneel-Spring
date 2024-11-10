@@ -24,8 +24,8 @@ public class Player {
     private Boolean isAdmin;
     private Boolean isReady;
 
-//    private List<Skill> skillList;
-//    private PlayerCharacter playerCharacter;
+    private List<Long> skillNumList;
+    private Long characterNum;
 
     public static PlayerRole getRandomRole() {
         PlayerRole[] playerRoles = PlayerRole.values();

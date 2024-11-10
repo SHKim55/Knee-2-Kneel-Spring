@@ -6,8 +6,6 @@ import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
 import com.ironknee.Knee2KneelSpring.service.game.GameService;
 import com.ironknee.Knee2KneelSpring.service.player.PlayerRole;
-import com.ironknee.Knee2KneelSpring.service.statistics.StatisticsService;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,12 +56,28 @@ public class GameController {
         return gameService.changeRole(token, gameId, role);
     }
 
+    // 스킬 변경
+    // 플레이어가 선택하는 스킬 리스트 정보 저장
+    @PostMapping("/modify/{gameId}/skill")
+    public ResponseObject<GameDTO> changeSkill(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
+                                              @RequestBody List<Long> skillNumList) {
+        return gameService.changeSkill(token, gameId, skillNumList);
+    }
+
+    // 캐릭터 변경
+    // 플레이어가 선택하는 컨셉 캐릭터 정보 저장
+    @PostMapping("/modify/{gameId}/character/{characterNum}")
+    public ResponseObject<GameDTO> changeCharacter(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
+                                               @PathVariable Long characterNum) {
+        return gameService.changeCharacter(token, gameId, characterNum);
+    }
+
     // AI 플레이어 변경 (미완성)
     // 매칭되지 않은 플레이어를 AI 플레이어로 대체할 수 있는 기능
     @PostMapping("/modify/{gameId}/toComputer/{slotNum}")
-    public ResponseObject<GameDTO> changeToCom(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
+    public ResponseObject<GameDTO> changeToAI(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
                                                @PathVariable Long slotNum) {
-//        return gameService.changeToCom(token, gameId, slotNum);
+//        return gameService.changeToAI(token, gameId, slotNum);
         return null;
     }
 
