@@ -35,21 +35,21 @@ public class SkillController {
     // 유저 스킬 검색
     // 현재 유저가 보유한 스킬 목록 반환
     @GetMapping("/search/user")
-    public ResponseObject<List<SkillDTO>> searchUserSkills(@RequestHeader("Authorization") String token) {
+    public ResponseObject<List<SkillDTO>> searchUserSkills(@RequestHeader(name = "Authorization") String token) {
         return skillService.searchUserSkills(token);
     }
 
     // 스킬 부여
     // 새로운 스킬을 특정 유저에게 부여함 (unlock)
     @PostMapping("/grant/{skillNum}")
-    public ResponseObject<Boolean> grantSkill(@RequestHeader("Authorization") String token, @PathVariable Long skillNum) {
+    public ResponseObject<Boolean> grantSkill(@RequestHeader(name = "Authorization") String token, @PathVariable Long skillNum) {
         return skillService.grantSkill(token, skillNum);
     }
 
     // 스킬 부여 해제
     // 특정 유저에게 부여한 스킬을 접근 해제함
     @PostMapping("/revoke/{skillNum}")
-    public ResponseObject<Boolean> revokeSkill(@RequestHeader("Authorization") String token, @PathVariable Long skillNum) {
+    public ResponseObject<Boolean> revokeSkill(@RequestHeader(name = "Authorization") String token, @PathVariable Long skillNum) {
         return skillService.revokeSkill(token, skillNum);
     }
 
