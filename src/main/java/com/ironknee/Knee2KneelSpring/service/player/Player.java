@@ -27,6 +27,8 @@ public class Player {
     private List<Long> skillNumList;
     private Long characterNum;
 
+    private Boolean isAI;
+
     public static PlayerRole getRandomRole() {
         PlayerRole[] playerRoles = PlayerRole.values();
 

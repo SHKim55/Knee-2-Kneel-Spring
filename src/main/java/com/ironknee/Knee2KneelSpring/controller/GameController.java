@@ -9,7 +9,6 @@ import com.ironknee.Knee2KneelSpring.service.player.PlayerRole;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/game")
@@ -50,10 +49,10 @@ public class GameController {
 
     // 역할 변경
     // 플레이어가 랜덤하게 지정된 초기 역할에서 자신이 맡고자 하는 역할로 변경 (교수는 1명으로 제한)
-    @PostMapping("/modify/{gameId}/role/{role}")
+    @PostMapping("/modify/{gameId}/role/{role}/{nickname}")
     public ResponseObject<GameDTO> changeRole(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
-                                              @PathVariable PlayerRole role) {
-        return gameService.changeRole(token, gameId, role);
+                                              @PathVariable PlayerRole role, @PathVariable String nickname) {
+        return gameService.changeRole(token, gameId, role, nickname);
     }
 
     // 스킬 변경
@@ -72,13 +71,18 @@ public class GameController {
         return gameService.changeCharacter(token, gameId, characterNum);
     }
 
-    // AI 플레이어 변경 (미완성)
-    // 매칭되지 않은 플레이어를 AI 플레이어로 대체할 수 있는 기능
-    @PostMapping("/modify/{gameId}/toComputer/{slotNum}")
-    public ResponseObject<GameDTO> changeToAI(@RequestHeader(name = "Authorization") String token, @PathVariable Long gameId,
-                                               @PathVariable Long slotNum) {
-//        return gameService.changeToAI(token, gameId, slotNum);
-        return null;
+    // AI 플레이어 생성
+    // 대기방에 남은 자리가 있는 경우 AI 플레이어를 생성할 수 있는 기능
+    @PostMapping("/modify/{gameId}/ai/create/{role}")
+    public ResponseObject<GameDTO> createAI(@PathVariable Long gameId, @PathVariable PlayerRole role) {
+        return gameService.createAI(gameId, role);
+    }
+
+    // AI 플레이어 삭제
+    // 생성된 AI 플레이어를 다시 삭제할 수 있는 기능
+    @PostMapping("/modify/{gameId}/ai/remove/{nickname}")
+    public ResponseObject<GameDTO> createAI(@PathVariable Long gameId, @PathVariable String nickname) {
+        return gameService.removeAI(gameId, nickname);
     }
 
     // 플레이어 대기완료 상태 부여
