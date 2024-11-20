@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironknee.Knee2KneelSpring.authentication.JwtUtil;
 import com.ironknee.Knee2KneelSpring.dto.ResponseCode;
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
+import com.ironknee.Knee2KneelSpring.dto.game.GameChatDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameCreateDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
@@ -881,5 +882,14 @@ public class GameService {
         }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 대기방 채팅
+    public String chat(String token, GameChatDTO chatMessage) {
+        UserEntity user = findUserByToken(token);
+        if(user == null) return null;
+
+        return user.getNickname() + ": " + chatMessage;
+//        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
     }
 }
