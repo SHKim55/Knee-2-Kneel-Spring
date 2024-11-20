@@ -1,7 +1,8 @@
-package com.ironknee.Knee2KneelSpring.websocket;
+package com.ironknee.Knee2KneelSpring.controller;
 
 import com.ironknee.Knee2KneelSpring.dto.game.GameChatDTO;
 import com.ironknee.Knee2KneelSpring.service.game.GameService;
+import com.ironknee.Knee2KneelSpring.websocket.CustomChannelInterceptor;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -63,7 +64,7 @@ public class WebSocketController {
 //    }
 
     @MessageMapping("/game/chat/{gameId}")
-    @SendTo("/sub/game/{gameId}")
+    @SendTo("/sub/game/chat/{gameId}")
     public String chat(@Header("Authorization") String token,
                        @Payload GameChatDTO chatMessage) {
         try {
