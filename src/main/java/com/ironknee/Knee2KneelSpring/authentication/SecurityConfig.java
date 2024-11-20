@@ -1,4 +1,4 @@
-package com.ironknee.Knee2KneelSpring.configuration;
+package com.ironknee.Knee2KneelSpring.authentication;
 
 import com.ironknee.Knee2KneelSpring.authentication.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
@@ -28,8 +28,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/logIn").permitAll() // 회원가입 및 로그인 URL은 인증 없이 접근 가능
                         .requestMatchers("/api/user/register").permitAll()
-                        .requestMatchers("/ws").permitAll()
-                        .requestMatchers("/ws-stomp").permitAll()
+                        .requestMatchers("/api/ws/**").permitAll()
+                        .requestMatchers("/pub/**").permitAll()
+                        .requestMatchers("/sub/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용 시 Stateless
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
