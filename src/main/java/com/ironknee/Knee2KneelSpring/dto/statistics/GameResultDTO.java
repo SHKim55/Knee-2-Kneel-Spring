@@ -9,7 +9,6 @@ import java.util.UUID;
 
 @Getter
 @NoArgsConstructor
-@RequiredArgsConstructor
 public class GameResultDTO {
     private List<UUID> playerIdList;
 }
