@@ -8,39 +8,41 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class GameWebSocketHandler implements WebSocketHandler {
+public class GameWebSocketHandler {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     private String getUsernameFromSession(WebSocketSession session) {
         return (String) session.getAttributes().get("username");
     }
 
-    @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String username = getUsernameFromSession(session);
-        sessions.put(username, session);
-    }
-
-    @Override
-    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
-
-    }
-
-    @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-
-    }
-
-    @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-        String username = getUsernameFromSession(session);
-        sessions.remove(username);
-    }
-
-    @Override
-    public boolean supportsPartialMessages() {
-        return false;
-    }
+//    @Override
+//    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+//        System.out.println(session.getAttributes());
+//        String username = getUsernameFromSession(session);
+//        System.out.println("username sessioned : " + username);
+//        sessions.put(username, session);
+//    }
+//
+//    @Override
+//    public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+//
+//    }
+//
+//    @Override
+//    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+//
+//    }
+//
+//    @Override
+//    public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+//        String username = getUsernameFromSession(session);
+//        sessions.remove(username);
+//    }
+//
+//    @Override
+//    public boolean supportsPartialMessages() {
+//        return false;
+//    }
 
     public void sendMessageToClient(String username, String message) throws IOException {
         WebSocketSession session = sessions.get(username);

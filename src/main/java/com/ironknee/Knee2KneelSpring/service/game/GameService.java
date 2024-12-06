@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironknee.Knee2KneelSpring.authentication.JwtUtil;
 import com.ironknee.Knee2KneelSpring.dto.ResponseCode;
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
+import com.ironknee.Knee2KneelSpring.dto.game.GameChatDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameCreateDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
@@ -759,6 +760,10 @@ public class GameService {
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
+        // 게임방에서 나간 유저 매칭 대기상태 변경
+        userEntity.setMatchStatus(MatchStatus.none);
+        userRepository.save(userEntity);
+
         // 게임방에 아무도 남아있지 않는 경우 (게임방 삭제)
         if(playerList.isEmpty()) {
             gameList.remove(currentGameIndex);
@@ -772,9 +777,6 @@ public class GameService {
                 return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
             }
         }
-
-        userEntity.setMatchStatus(MatchStatus.none);
-        userRepository.save(userEntity);
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
@@ -881,5 +883,14 @@ public class GameService {
         }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+    }
+
+    // 대기방 채팅
+    public String chat(String token, GameChatDTO chatMessage) {
+        UserEntity user = findUserByToken(token);
+        if(user == null) return null;
+
+        return user.getNickname() + ": " + chatMessage;
+//        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
     }
 }
