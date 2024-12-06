@@ -29,6 +29,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/user/logIn").permitAll() // 회원가입 및 로그인 URL은 인증 없이 접근 가능
                         .requestMatchers("/api/user/register").permitAll()
                         .requestMatchers("/api/game/finish/").permitAll()
+                        .requestMatchers("/api/statistics/**").permitAll()
                         .requestMatchers("/api/ws/**").permitAll()
                         .requestMatchers("/pub/**").permitAll()
                         .requestMatchers("/sub/**").permitAll()
