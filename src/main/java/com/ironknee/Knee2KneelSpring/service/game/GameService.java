@@ -886,11 +886,13 @@ public class GameService {
     }
 
     // 대기방 채팅
-    public String chat(String token, GameChatDTO chatMessage) {
+    public GameChatDTO chat(String token, GameChatDTO chatMessage) {
         UserEntity user = findUserByToken(token);
         if(user == null) return null;
 
-        return user.getNickname() + ": " + chatMessage;
+//        return user.getNickname() + ": " + chatMessage;
 //        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
+
+        return chatMessage;
     }
 }

@@ -1,11 +1,9 @@
 package com.ironknee.Knee2KneelSpring.dto.game;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Getter
-@Builder
+@NoArgsConstructor
 public class GameChatDTO {
     private String message;
 }

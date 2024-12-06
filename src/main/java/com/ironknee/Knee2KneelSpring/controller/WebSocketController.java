@@ -1,6 +1,10 @@
 package com.ironknee.Knee2KneelSpring.controller;
 
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.game.GameChatDTO;
+import com.ironknee.Knee2KneelSpring.dto.game.GameCreateDTO;
+import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.service.game.GameService;
 import com.ironknee.Knee2KneelSpring.websocket.CustomChannelInterceptor;
 import org.springframework.messaging.handler.annotation.Header;
@@ -9,6 +13,10 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Controller
 public class WebSocketController {
@@ -63,12 +71,28 @@ public class WebSocketController {
 ////        sendMessageToGamePlayers(responseObject.getData());
 //    }
 
+    @MessageMapping("/game/enter")
+    @SendTo("/sub/game/enter")
+    public ResponseObject<GameDTO> enterGame(@Header(name = "Authorization") String token,
+                                              @Header(name = "gameId") Long gameId) {
+        return gameService.enterGame(token, gameId);
+    }
+
+    @MessageMapping("/game/refresh")
+    @SendTo("/sub/game/data")
+    public ResponseObject<GameDTO> refreshGame(@Header(name = "gameId") Long gameId) {
+        return gameService.refreshGame(gameId);
+    }
+
     @MessageMapping("/game/chat/{gameId}")
     @SendTo("/sub/game/chat/{gameId}")
-    public String chat(@Header("Authorization") String token,
-                       @Payload GameChatDTO chatMessage) {
+    public GameChatDTO chat(@Header("Authorization") String token,
+                            @Payload GameChatDTO chatMessage) {
+
+        System.out.println(token);
+
         try {
-            String data = gameService.chat(token, chatMessage);
+            GameChatDTO data = gameService.chat(token, chatMessage);
             if(data == null)
                 throw new NullPointerException();
 
