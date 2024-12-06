@@ -746,12 +746,9 @@ public class GameService {
         int currentGameIndex = (int) gameMap.get("index");
         List<Player> playerList = currentGame.getPlayerList();
 
-        for(Player player : playerList) {
-            if(!gameResultDTO.getPlayerIdList().contains(player.getUserId())) {
-                playerList.remove(player);
-                continue;
-            }
+        playerList.removeIf(player -> !gameResultDTO.getPlayerIdList().contains(player.getUserId()));
 
+        for(Player player : playerList) {
             Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(player.getUserId());
             if(optionalUserEntity.isEmpty())
                 return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid player information", null);
@@ -784,5 +781,12 @@ public class GameService {
 
         return user.getNickname() + ": " + chatMessage;
 //        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
+    }
+
+    public void initializeMatch(UserDTO userDTO) {
+        for(Game game : gameList) {
+            if(game.getPlayerList().isEmpty()) continue;
+            game.getPlayerList().removeIf(player -> player.getUserId().equals(userDTO.getUserId()));
+        }
     }
 }

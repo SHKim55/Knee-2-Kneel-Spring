@@ -20,6 +20,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -119,21 +121,28 @@ public class UserService {
     }
 
     @Transactional
-    public ResponseObject<UserDTO> getUserInfo(final String token) {
+    public Map<String, Object> getUserInfo(final String token) {
+        Map<String ,Object> hashMap = new HashMap<>();
         UserEntity userEntity = findUserByToken(token);
 
         if(userEntity == null) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id", null);
+            hashMap.put("error", "DB Error : No user having such id");
+            return hashMap;
         }
 
         // 매칭방 내 유저, 게임 내 유저의 재접속 시 매칭 상태 정보 초기화
         if(userEntity.getMatchStatus() == MatchStatus.matched ||
                 userEntity.getMatchStatus() == MatchStatus.playing) {
+
             userEntity.setMatchStatus(MatchStatus.none);
             userRepository.save(userEntity);
+
+            hashMap.put("reconnect", convertEntityToDTO(userEntity));
+            return hashMap;
         }
 
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", convertEntityToDTO(userEntity));
+        hashMap.put("new", convertEntityToDTO(userEntity));
+        return hashMap;
     }
 
     @Transactional
