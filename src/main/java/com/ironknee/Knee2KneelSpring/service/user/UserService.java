@@ -124,6 +124,14 @@ public class UserService {
         if(userEntity == null) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id", null);
         }
+
+        // 매칭방 내 유저, 게임 내 유저의 재접속 시 매칭 상태 정보 초기화
+        if(userEntity.getMatchStatus() == MatchStatus.matched ||
+                userEntity.getMatchStatus() == MatchStatus.playing) {
+            userEntity.setMatchStatus(MatchStatus.none);
+            userRepository.save(userEntity);
+        }
+
         return new ResponseObject<>(ResponseCode.success.toString(), "success", convertEntityToDTO(userEntity));
     }
 
