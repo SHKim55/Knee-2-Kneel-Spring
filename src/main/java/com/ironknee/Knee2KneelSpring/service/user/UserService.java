@@ -118,6 +118,7 @@ public class UserService {
         }
     }
 
+    @Transactional
     public ResponseObject<UserDTO> getUserInfo(final String token) {
         UserEntity userEntity = findUserByToken(token);
 
