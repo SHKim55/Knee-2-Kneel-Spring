@@ -37,7 +37,7 @@ public class GameService {
     private final JwtUtil jwtUtil;
 
     private final ArrayList<Game> gameList = new ArrayList<>();
-    private Long gameIdCounter = 0L;
+    private Long gameIdCounter = 1L;
 
     private Long aiPlayerNum = 0L;
 
@@ -55,7 +55,11 @@ public class GameService {
     private Long generateGameId() {
 //        return UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
         Long id = gameIdCounter;
-        gameIdCounter++;
+        if(id < 100)
+            gameIdCounter += 1;
+        else
+            gameIdCounter = (gameIdCounter % 100) + 1;
+
         return id;
     }
 
