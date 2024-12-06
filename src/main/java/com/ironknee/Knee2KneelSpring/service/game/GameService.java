@@ -22,7 +22,6 @@ import com.ironknee.Knee2KneelSpring.service.player.PlayerRole;
 import com.ironknee.Knee2KneelSpring.service.user.MatchStatus;
 import com.ironknee.Knee2KneelSpring.service.user.UserRank;
 import com.ironknee.Knee2KneelSpring.service.user.UserService;
-import com.ironknee.Knee2KneelSpring.websocket.GameWebSocketHandler;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -35,27 +34,33 @@ public class GameService {
     private final StatisticsRepository statisticsRepository;
     private final SkillRepository skillRepository;
     private final CharacterRepository characterRepository;
-    private final GameWebSocketHandler gameWebSocketHandler;
     private final JwtUtil jwtUtil;
 
     private final ArrayList<Game> gameList = new ArrayList<>();
+    private Long gameIdCounter = 1L;
 
     private Long aiPlayerNum = 0L;
 
     public GameService(final UserRepository userRepository, final StatisticsRepository statisticsRepository,
                        final SkillRepository skillRepository, final CharacterRepository characterRepository,
-                       final GameWebSocketHandler gameWebSocketHandler, final JwtUtil jwtUtil) {
+                       final JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.statisticsRepository = statisticsRepository;
         this.skillRepository = skillRepository;
         this.characterRepository = characterRepository;
-        this.gameWebSocketHandler = gameWebSocketHandler;
         this.jwtUtil = jwtUtil;
     }
 
     // * Private Methods *
     private Long generateGameId() {
-        return UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+//        return UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        Long id = gameIdCounter;
+        if(id < 100)
+            gameIdCounter += 1;
+        else
+            gameIdCounter = (gameIdCounter % 100) + 1;
+
+        return id;
     }
 
     private String convertToJson(GameDTO gameDTO) throws JsonProcessingException {
@@ -183,12 +188,6 @@ public class GameService {
 
         GameDTO newGameDTO = convertEntityToDTO(newGame);
 
-        try {
-            gameWebSocketHandler.sendMessageToClient(adminPlayer.getUserEmail(), convertToJson(newGameDTO));
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         userEntity.setMatchStatus(MatchStatus.matched);
         userRepository.save(userEntity);
         return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
@@ -252,14 +251,6 @@ public class GameService {
 
         GameDTO newGameDTO = convertEntityToDTO(gameToEnter);
 
-        try {
-            for(Player player : currentPlayerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(newGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         userEntity.setMatchStatus(MatchStatus.matched);
         userRepository.save(userEntity);
 
@@ -309,14 +300,6 @@ public class GameService {
         gameList.set(currentIndex, currentGame);
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
@@ -380,14 +363,6 @@ public class GameService {
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
@@ -433,14 +408,6 @@ public class GameService {
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
@@ -474,14 +441,6 @@ public class GameService {
         gameList.set(currentGameIndex, currentGame);
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
@@ -549,14 +508,6 @@ public class GameService {
 
         GameDTO newGameDTO = convertEntityToDTO(currentGame);
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(newGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         aiPlayerNum++;
         return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
     }
@@ -578,14 +529,6 @@ public class GameService {
         gameList.set(currentGameIndex, currentGame);
 
         GameDTO newGameDTO = convertEntityToDTO(currentGame);
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(newGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
     }
@@ -617,14 +560,6 @@ public class GameService {
 
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
@@ -650,14 +585,6 @@ public class GameService {
             currentGameDTO = convertEntityToDTO(currentGame);
         } catch (Exception e) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid map name", null);
-        }
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
         }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
@@ -690,14 +617,6 @@ public class GameService {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
         }
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
@@ -726,14 +645,6 @@ public class GameService {
             currentGameDTO = convertEntityToDTO(currentGame);
         } catch (Exception e) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
-        }
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
         }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
@@ -768,14 +679,6 @@ public class GameService {
         if(playerList.isEmpty()) {
             gameList.remove(currentGameIndex);
             return new ResponseObject<>(ResponseCode.success.toString(), "empty room has been deleted successfully", null);
-        } else {
-            try {
-                for(Player player : playerList)
-                    gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-            }
         }
 
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
@@ -822,14 +725,6 @@ public class GameService {
         currentGame.setIsPlaying(true);
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
 
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         // 플레이어 상태 변경 - 게임중
         for(Player player : playerList) {
             Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(player.getUserEmail());
@@ -845,14 +740,16 @@ public class GameService {
 
     // 게임 종료 (종료 후 대기방으로 복귀)
     @Transactional
-    public ResponseObject<List<GameResultDTO>> finishGame(Long gameId, GameDTO gameDTO) {
+    public ResponseObject<GameDTO> finishGame(Long gameId, GameResultDTO gameResultDTO) {
         Map<String, Object> gameMap = findGameByGameId(gameId);
         Game currentGame = (Game) gameMap.get("game");
         int currentGameIndex = (int) gameMap.get("index");
         List<Player> playerList = currentGame.getPlayerList();
 
+        playerList.removeIf(player -> !gameResultDTO.getPlayerIdList().contains(player.getUserId()));
+
         for(Player player : playerList) {
-            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(player.getUserEmail());
+            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(player.getUserId());
             if(optionalUserEntity.isEmpty())
                 return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid player information", null);
 
@@ -861,10 +758,11 @@ public class GameService {
             userRepository.save(userEntity);
         }
 
-        List<GameResultDTO> gameResultDTOList = new ArrayList<>();
-        // 게임 통계 처리 로직 추후 추가
+        currentGame.setPlayerList(playerList);
+        gameList.set(currentGameIndex, currentGame);
+        GameDTO gameDTO = convertEntityToDTO(currentGame);
 
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameResultDTOList);
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTO);
     }
 
     // 대기방 새로고침
@@ -872,16 +770,7 @@ public class GameService {
         Map<String, Object> gameMap = findGameByGameId(gameId);
         Game currentGame = (Game) gameMap.get("game");
 
-        List<Player> playerList = currentGame.getPlayerList();
         GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-
-        try {
-            for(Player player : playerList)
-                gameWebSocketHandler.sendMessageToClient(player.getUserEmail(), convertToJson(currentGameDTO));
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Communication Error : Error occurred in sending message to clients", null);
-        }
-
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
@@ -892,5 +781,12 @@ public class GameService {
 
         return user.getNickname() + ": " + chatMessage;
 //        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
+    }
+
+    public void initializeMatch(UserDTO userDTO) {
+        for(Game game : gameList) {
+            if(game.getPlayerList().isEmpty()) continue;
+            game.getPlayerList().removeIf(player -> player.getUserId().equals(userDTO.getUserId()));
+        }
     }
 }
