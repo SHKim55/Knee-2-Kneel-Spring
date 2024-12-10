@@ -1,105 +1,114 @@
 package com.ironknee.Knee2KneelSpring.controller;
 
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
 import com.ironknee.Knee2KneelSpring.dto.game.GameChatDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameCreateDTO;
 import com.ironknee.Knee2KneelSpring.dto.game.GameDTO;
 import com.ironknee.Knee2KneelSpring.service.game.GameService;
-import com.ironknee.Knee2KneelSpring.websocket.CustomChannelInterceptor;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 public class WebSocketController {
-    private final SimpMessageSendingOperations simpMessageSendingOperations;
-    private final CustomChannelInterceptor customChannelInterceptor;
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final GameService gameService;
 
-    public WebSocketController(final SimpMessageSendingOperations simpMessageSendingOperations,
-                               final CustomChannelInterceptor customChannelInterceptor,
+    // enter를 부른 client의 id를 Key로, gameId를 Value로 만든 map을 저장하고 서버에서 메시지를 선별적으로 보내는데 활용
+    private Map<String, Long> sessionMap = new HashMap<>();
+
+    public WebSocketController(final SimpMessagingTemplate simpMessagingTemplate,
                                final GameService gameService) {
-        this.simpMessageSendingOperations = simpMessageSendingOperations;
-        this.customChannelInterceptor = customChannelInterceptor;
+        this.simpMessagingTemplate = simpMessagingTemplate;
         this.gameService = gameService;
     }
 
-//    private void sendMessageToGamePlayers(GameDTO gameDTO) {
-//        System.out.println("game data in sendMessage : " + gameDTO.getPlayerList().toString());
-//
-//        for(Player player : gameDTO.getPlayerList()) {
-//            String username = player.getUserEmail();
-//            String sessionId = customChannelInterceptor.getSessionIdByUsername(username);
-//
-//            simpMessageSendingOperations.convertAndSendToUser(sessionId, "/sub/", gameDTO.toString());
-//        }
-//    }
-//
-//    private void sendMessageTest(GameDTO gameDTO) {
-//        System.out.println("game data in sendMessage : " + gameDTO.getPlayerList().toString());
-//
-//        for(Player player : gameDTO.getPlayerList()) {
-//            String username = player.getUserEmail();
-//            String sessionId = customChannelInterceptor.getSessionIdByUsername(username);
-//
-//            simpMessageSendingOperations.convertAndSendToUser(sessionId, "/sub/", gameDTO.toString());
-//        }
-//    }
+    @MessageMapping("/game/session")
+    public void getSessionId(@Header(name = "simpSessionId") String sessionId) {
+        System.out.println("sessionId : " + sessionId);
+        System.out.println("Sending data from server");
+        simpMessagingTemplate.convertAndSendToUser(sessionId, "/game/session", sessionId);
+    }
 
-//    @MessageMapping("/create")
-//    @SendTo("/sub/create")
-//    public ResponseObject<GameCreateDTO> createGame(@Header("username") String token,
-//                                                    @Payload GameCreateDTO gameCreateDTO) {
-//        System.out.println("go in controller");
-//        System.out.println("token : " + token);
-//
-//        String temporalToken = "test02@google.com";
-//        System.out.println(temporalToken);
-//
-//        ResponseObject<GameCreateDTO> responseObject = new ResponseObject<>(ResponseCode.success.toString(), "sucess", gameCreateDTO);
-//
-//        System.out.println("maxPlayer : " + responseObject.getData().getMaxPlayer());
-//        return responseObject;
-////        sendMessageToGamePlayers(responseObject.getData());
-//    }
+    @MessageMapping("/game/create")
+    @SendTo("/sub/game/create")
+    public ResponseObject<GameDTO> createGame(@Header(name = "Authorization") String token, @Header(name = "clientId") String clientId,
+                                              @Payload GameCreateDTO gameCreateDTO) {
+        return gameService.createGame(token, gameCreateDTO);
+    }
+
+    @MessageMapping("/game/search")
+    @SendTo("/sub/game/search")
+    public ResponseObject<List<GameDTO>> searchGames() {
+        return gameService.searchGames();
+    }
 
     @MessageMapping("/game/enter")
-    @SendTo("/sub/game/enter")
-    public ResponseObject<GameDTO> enterGame(@Header(name = "Authorization") String token,
-                                              @Header(name = "gameId") Long gameId) {
+    public ResponseObject<GameDTO> enterGame(@Header(name = "Authorization") String token, //@Header(name = "id") String clientId,
+                          @Header(name = "gameId") Long gameId) {
+        ResponseObject<GameDTO> response = gameService.enterGame(token, gameId);
+
+        simpMessagingTemplate.convertAndSend("/sub/game/enter", response);
+        simpMessagingTemplate.convertAndSend("/sub/game/data/" + gameId, response);
         return gameService.enterGame(token, gameId);
     }
 
     @MessageMapping("/game/refresh")
-    @SendTo("/sub/game/data")
-    public ResponseObject<GameDTO> refreshGame(@Header(name = "gameId") Long gameId) {
-        return gameService.refreshGame(gameId);
+    public void refreshGame(@Header(name = "gameId") Long gameId) {
+//        try {
+//            ResponseObject<GameDTO> response = gameService.refreshGame(gameId);
+//            sessionMap.forEach((key, value) -> {
+//                if(value.equals(gameId)) {
+//                    simpMessagingTemplate.convertAndSendToUser(key, "/game/data", response);
+//                }
+//            });
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        ResponseObject<GameDTO> response = gameService.refreshGame(gameId);
+        String dataDestination = "/sub/game/data/" + gameId;
+        simpMessagingTemplate.convertAndSend(dataDestination, response);
     }
 
-    @MessageMapping("/game/chat/{gameId}")
-    @SendTo("/sub/game/chat/{gameId}")
-    public GameChatDTO chat(@Header("Authorization") String token,
-                            @Payload GameChatDTO chatMessage) {
+    @MessageMapping("/game/exit")
+    public void exitGame(@Header(name = "Authorization") String token, @Header(name = "gameId") Long gameId) {
+        ResponseObject<GameDTO> response = gameService.exitGame(token, gameId);
+
+        String dataDestination = "/sub/game/data/" + gameId;
+        simpMessagingTemplate.convertAndSend(dataDestination, response);
+        simpMessagingTemplate.convertAndSend("/sub/game/exit", response);
+    }
+
+    @MessageMapping("/game/chat")
+    public void chat(@Header("Authorization") String token, @Header(name = "gameId") Long gameId,
+                     @Payload GameChatDTO chatMessage) {
 
         System.out.println(token);
 
         try {
-            GameChatDTO data = gameService.chat(token, chatMessage);
-            if(data == null)
+            GameChatDTO chatData = gameService.chat(token, chatMessage);
+            if(chatData == null)
                 throw new NullPointerException();
 
-            return data;
+            String chatDestination = "/sub/game/chat/" + gameId;
+            simpMessagingTemplate.convertAndSend(chatDestination, chatData);
+
+//            sessionMap.forEach((key, value) -> {
+//                if(value.equals(gameId)) {
+//                    simpMessagingTemplate.convertAndSendToUser(key, "/game/chat", chatData);
+//                }
+//            });
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
         }
     }
 }
