@@ -1,12 +1,15 @@
 package com.ironknee.Knee2KneelSpring.service.statistics;
 
+import com.ironknee.Knee2KneelSpring.authentication.JwtUtil;
 import com.ironknee.Knee2KneelSpring.dto.ResponseCode;
 import com.ironknee.Knee2KneelSpring.dto.ResponseObject;
+import com.ironknee.Knee2KneelSpring.dto.statistics.GameResultDTO;
 import com.ironknee.Knee2KneelSpring.dto.statistics.StatisticsDTO;
 import com.ironknee.Knee2KneelSpring.entity.StatisticsEntity;
 import com.ironknee.Knee2KneelSpring.entity.UserEntity;
 import com.ironknee.Knee2KneelSpring.repository.StatisticsRepository;
 import com.ironknee.Knee2KneelSpring.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,10 +19,21 @@ import java.util.UUID;
 public class StatisticsService {
     private final UserRepository userRepository;
     private final StatisticsRepository statisticsRepository;
+    private final JwtUtil jwtUtil;
 
-    public StatisticsService(final UserRepository userRepository, final StatisticsRepository statisticsRepository) {
+    public StatisticsService(final UserRepository userRepository, final StatisticsRepository statisticsRepository,
+                             final JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.statisticsRepository = statisticsRepository;
+        this.jwtUtil = jwtUtil;
+    }
+
+    private UserEntity findUserByToken(String token) {
+        Claims claims = jwtUtil.extractTokenValue(token);
+        String email = claims.get("sub", String.class); // username(email) 추출
+
+        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByEmail(email);
+        return optionalUserEntity.orElse(null);
     }
 
     public static StatisticsDTO convertEntityToDTO(final StatisticsEntity statisticsEntity) {
@@ -44,14 +58,9 @@ public class StatisticsService {
                 .build();
     }
 
-    public ResponseObject<StatisticsDTO> getUserStatisticsByUser(final UUID userId) {
-        Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(userId);
-
-        if(optionalUserEntity.isEmpty()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No user having such id", null);
-        }
-
-        Optional<StatisticsEntity> optionalStatisticsEntity = statisticsRepository.findStatisticsEntityByUser(optionalUserEntity.get());
+    public ResponseObject<StatisticsDTO> getUserStatisticsByUser(final String token) {
+        UserEntity userEntity = findUserByToken(token);
+        Optional<StatisticsEntity> optionalStatisticsEntity = statisticsRepository.findStatisticsEntityByUser(userEntity);
 
         if(optionalStatisticsEntity.isEmpty()) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : No statistics data of this user", null);
@@ -76,5 +85,9 @@ public class StatisticsService {
 
             return new ResponseObject<>(ResponseCode.success.toString(), "success", statisticsDTO);
         }
+    }
+
+    public ResponseObject<Boolean> updateStatistics(Object gameResultDTO) {
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", true);
     }
 }

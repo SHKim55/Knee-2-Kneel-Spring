@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/ws/**").permitAll()
                         .requestMatchers("/pub/**").permitAll()
                         .requestMatchers("/sub/**").permitAll()
+                        .requestMatchers("/user/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 사용 시 Stateless
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
