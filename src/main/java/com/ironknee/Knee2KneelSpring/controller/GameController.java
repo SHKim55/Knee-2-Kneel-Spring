@@ -81,7 +81,7 @@ public class GameController {
     // AI 플레이어 삭제
     // 생성된 AI 플레이어를 다시 삭제할 수 있는 기능
     @PostMapping("/modify/{gameId}/ai/remove/{nickname}")
-    public ResponseObject<GameDTO> createAI(@PathVariable Long gameId, @PathVariable String nickname) {
+    public ResponseObject<GameDTO> removeAI(@PathVariable Long gameId, @PathVariable String nickname) {
         return gameService.removeAI(gameId, nickname);
     }
 
