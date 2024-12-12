@@ -147,115 +147,115 @@ public class GameService {
     }
 
     // * Public Member Methods *
-    // 게임방 생성
-    @Transactional
-    public ResponseObject<GameDTO> createGame(final String token, final GameCreateDTO gameCreateDTO) {
-        UserEntity userEntity;
-        Player adminPlayer;
-        Game newGame;
+//    // 게임방 생성
+//    @Transactional
+//    public ResponseObject<GameDTO> createGame(final String token, final GameCreateDTO gameCreateDTO) {
+//        UserEntity userEntity;
+//        Player adminPlayer;
+//        Game newGame;
+//
+//        try {
+//            userEntity = findUserByToken(token);
+//
+//            adminPlayer = Player.builder()
+//                    .userId(userEntity.getUserId())
+//                    .userEmail(userEntity.getEmail())
+//                    .userNickname(userEntity.getNickname())
+//                    .level(userEntity.getLevel())
+//                    .userRank(userEntity.getUserRank())
+//                    .rankPoint(userEntity.getRankPoint())
+//                    .playerRole(PlayerRole.professor)
+//                    .isAdmin(true)
+//                    .isReady(true)
+//                    .skillNumList(new ArrayList<>())   // 장착 스킬 없음
+//                    .characterNum(0L)                  // Default Character
+//                    .isAI(false)
+//                    .build();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred in adding admin player", null);
+//        }
+//
+//        try {
+//            Long gameId = generateGameId();
+//            newGame = createGameObject(gameId, gameCreateDTO, adminPlayer);
+//            gameList.add(newGame);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred in creating game room", null);
+//        }
+//
+//        GameDTO newGameDTO = convertEntityToDTO(newGame);
+//
+//        userEntity.setMatchStatus(MatchStatus.matched);
+//        userRepository.save(userEntity);
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
+//    }
 
-        try {
-            userEntity = findUserByToken(token);
+//    // 게임방 검색
+//    public ResponseObject<List<GameDTO>> searchGames() {
+//        ArrayList<GameDTO> gameDTOList = new ArrayList<>();
+//        try {
+//            for(Game game : gameList)
+//                gameDTOList.add(convertEntityToDTO(game));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred while getting game list", null);
+//        }
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTOList);
+//    }
 
-            adminPlayer = Player.builder()
-                    .userId(userEntity.getUserId())
-                    .userEmail(userEntity.getEmail())
-                    .userNickname(userEntity.getNickname())
-                    .level(userEntity.getLevel())
-                    .userRank(userEntity.getUserRank())
-                    .rankPoint(userEntity.getRankPoint())
-                    .playerRole(PlayerRole.professor)
-                    .isAdmin(true)
-                    .isReady(true)
-                    .skillNumList(new ArrayList<>())   // 장착 스킬 없음
-                    .characterNum(0L)                  // Default Character
-                    .isAI(false)
-                    .build();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred in adding admin player", null);
-        }
-
-        try {
-            Long gameId = generateGameId();
-            newGame = createGameObject(gameId, gameCreateDTO, adminPlayer);
-            gameList.add(newGame);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred in creating game room", null);
-        }
-
-        GameDTO newGameDTO = convertEntityToDTO(newGame);
-
-        userEntity.setMatchStatus(MatchStatus.matched);
-        userRepository.save(userEntity);
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
-    }
-
-    // 게임방 검색
-    public ResponseObject<List<GameDTO>> searchGames() {
-        ArrayList<GameDTO> gameDTOList = new ArrayList<>();
-        try {
-            for(Game game : gameList)
-                gameDTOList.add(convertEntityToDTO(game));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : Error occurred while getting game list", null);
-        }
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTOList);
-    }
-
-    // 게임방 입장
-    @Transactional
-    public ResponseObject<GameDTO> enterGame(final String token, final Long gameId) {
-        UserEntity userEntity = findUserByToken(token);
-        UserDTO userDTO = UserService.convertEntityToDTO(userEntity);
-
-        if(userEntity.getMatchStatus() != MatchStatus.none) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The player is matched with another game or still playing", null);
-        }
-
-        Map<String, Object> gameMap = findGameByGameId(gameId);
-        Game gameToEnter = (Game) gameMap.get("game");
-        int gameIndex = (int) gameMap.get("index");
-
-        if(gameToEnter == null) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No such game room", null);
-        } else if(gameToEnter.getIsPlaying()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
-        } else if(gameToEnter.getPlayerList().size() >= gameToEnter.getMaxPlayer()) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game room selected is already full", null);
-        }
-
-        Player currentPlayer = Player.builder()
-                .userId(userDTO.getUserId())
-                .userEmail(userDTO.getEmail())
-                .userNickname(userDTO.getNickname())
-                .level(userDTO.getLevel())
-                .userRank(userDTO.getUserRank())
-                .rankPoint(userDTO.getRankPoint())
-                .playerRole(Player.grantPlayerRole(gameToEnter))
-                .isAdmin(false)
-                .isReady(false)
-                .skillNumList(new ArrayList<>())
-                .characterNum(0L)
-                .isAI(false)
-                .build();
-
-        List<Player> currentPlayerList = gameToEnter.getPlayerList();
-        currentPlayerList.add(currentPlayer);
-        gameToEnter.setPlayerList(currentPlayerList);
-        gameList.set(gameIndex, gameToEnter);
-
-        GameDTO newGameDTO = convertEntityToDTO(gameToEnter);
-
-        userEntity.setMatchStatus(MatchStatus.matched);
-        userRepository.save(userEntity);
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
-    }
+//    // 게임방 입장
+//    @Transactional
+//    public ResponseObject<GameDTO> enterGame(final String token, final Long gameId) {
+//        UserEntity userEntity = findUserByToken(token);
+//        UserDTO userDTO = UserService.convertEntityToDTO(userEntity);
+//
+//        if(userEntity.getMatchStatus() != MatchStatus.none) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The player is matched with another game or still playing", null);
+//        }
+//
+//        Map<String, Object> gameMap = findGameByGameId(gameId);
+//        Game gameToEnter = (Game) gameMap.get("game");
+//        int gameIndex = (int) gameMap.get("index");
+//
+//        if(gameToEnter == null) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No such game room", null);
+//        } else if(gameToEnter.getIsPlaying()) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
+//        } else if(gameToEnter.getPlayerList().size() >= gameToEnter.getMaxPlayer()) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game room selected is already full", null);
+//        }
+//
+//        Player currentPlayer = Player.builder()
+//                .userId(userDTO.getUserId())
+//                .userEmail(userDTO.getEmail())
+//                .userNickname(userDTO.getNickname())
+//                .level(userDTO.getLevel())
+//                .userRank(userDTO.getUserRank())
+//                .rankPoint(userDTO.getRankPoint())
+//                .playerRole(Player.grantPlayerRole(gameToEnter))
+//                .isAdmin(false)
+//                .isReady(false)
+//                .skillNumList(new ArrayList<>())
+//                .characterNum(0L)
+//                .isAI(false)
+//                .build();
+//
+//        List<Player> currentPlayerList = gameToEnter.getPlayerList();
+//        currentPlayerList.add(currentPlayer);
+//        gameToEnter.setPlayerList(currentPlayerList);
+//        gameList.set(gameIndex, gameToEnter);
+//
+//        GameDTO newGameDTO = convertEntityToDTO(gameToEnter);
+//
+//        userEntity.setMatchStatus(MatchStatus.matched);
+//        userRepository.save(userEntity);
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
+//    }
 
     // 방장 변경
     @Transactional
@@ -304,67 +304,67 @@ public class GameService {
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
-    public ResponseObject<GameDTO> changeRole(String token, Long gameId, PlayerRole playerRoleToChange,
-                                              String nickname) {
-        Map<String, Object> gameMap = findGameByGameId(gameId);
-
-        Game currentGame = (Game) gameMap.get("game");
-        int currentGameIndex = (int) gameMap.get("index");
-        List<Player> playerList = currentGame.getPlayerList();
-
-        if(currentGame.getIsPlaying())
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
-
-        boolean hasProfessor = false;
-        int studentNum = 0, assistantNum = 0;
-        for(Player player : playerList) {
-            if(player.getPlayerRole() == PlayerRole.professor)
-                hasProfessor = true;
-            else if(player.getPlayerRole() == PlayerRole.student)
-                studentNum++;
-            else if(player.getPlayerRole() == PlayerRole.assistant)
-                assistantNum++;
-        }
-
-        if(studentNum >= 5 && playerRoleToChange == PlayerRole.student)
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The student team is already full", null);
-        if((assistantNum > 4 || (assistantNum == 4 && hasProfessor)) && playerRoleToChange == PlayerRole.assistant)
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The LAB team is already full", null);
-
-        UserEntity userEntity;
-        Player currentPlayer;
-        int currentPlayerIndex;
-        if(!nickname.startsWith("ai_")) {   // 사람 플레이어
-            userEntity = findUserByToken(token);
-            Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
-            currentPlayer = (Player) playerMap.get("player");
-            currentPlayerIndex = (int) playerMap.get("index");
-
-            if(currentPlayer == null)
-                return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No player having such player id in game", null);
-
-            currentPlayer.setPlayerRole(playerRoleToChange);
-            playerList.set(currentPlayerIndex, currentPlayer);
-        } else {  // AI 플레이어
-            boolean isValidAINickname = false;
-            for(Player aiPlayer : playerList) {
-                if(aiPlayer.getUserNickname().equals(nickname)) {
-                    aiPlayer.setPlayerRole(playerRoleToChange);
-                    isValidAINickname = true;
-                }
-            }
-
-            if(!isValidAINickname)
-                return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No AI player having such nickname", null);
-        }
-
-        currentGame.setPlayerList(playerList);
-        gameList.set(currentGameIndex, currentGame);
-
-        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
-    }
+//    public ResponseObject<GameDTO> changeRole(String token, Long gameId, PlayerRole playerRoleToChange,
+//                                              String nickname) {
+//        Map<String, Object> gameMap = findGameByGameId(gameId);
+//
+//        Game currentGame = (Game) gameMap.get("game");
+//        int currentGameIndex = (int) gameMap.get("index");
+//        List<Player> playerList = currentGame.getPlayerList();
+//
+//        if(currentGame.getIsPlaying())
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
+//
+//        boolean hasProfessor = false;
+//        int studentNum = 0, assistantNum = 0;
+//        for(Player player : playerList) {
+//            if(player.getPlayerRole() == PlayerRole.professor)
+//                hasProfessor = true;
+//            else if(player.getPlayerRole() == PlayerRole.student)
+//                studentNum++;
+//            else if(player.getPlayerRole() == PlayerRole.assistant)
+//                assistantNum++;
+//        }
+//
+//        if(studentNum >= 5 && playerRoleToChange == PlayerRole.student)
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The student team is already full", null);
+//        if((assistantNum > 4 || (assistantNum == 4 && hasProfessor)) && playerRoleToChange == PlayerRole.assistant)
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The LAB team is already full", null);
+//
+//        UserEntity userEntity;
+//        Player currentPlayer;
+//        int currentPlayerIndex;
+//        if(!nickname.startsWith("ai_")) {   // 사람 플레이어
+//            userEntity = findUserByToken(token);
+//            Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
+//            currentPlayer = (Player) playerMap.get("player");
+//            currentPlayerIndex = (int) playerMap.get("index");
+//
+//            if(currentPlayer == null)
+//                return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No player having such player id in game", null);
+//
+//            currentPlayer.setPlayerRole(playerRoleToChange);
+//            playerList.set(currentPlayerIndex, currentPlayer);
+//        } else {  // AI 플레이어
+//            boolean isValidAINickname = false;
+//            for(Player aiPlayer : playerList) {
+//                if(aiPlayer.getUserNickname().equals(nickname)) {
+//                    aiPlayer.setPlayerRole(playerRoleToChange);
+//                    isValidAINickname = true;
+//                }
+//            }
+//
+//            if(!isValidAINickname)
+//                return new ResponseObject<>(ResponseCode.fail.toString(), "Error : No AI player having such nickname", null);
+//        }
+//
+//        currentGame.setPlayerList(playerList);
+//        gameList.set(currentGameIndex, currentGame);
+//
+//        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+//    }
 
     // 플레이어 스킬 리스트 변경
     public ResponseObject<GameDTO> changeSkill(String token, Long gameId, List<Long> skillNumList) {
@@ -533,62 +533,62 @@ public class GameService {
         return new ResponseObject<>(ResponseCode.success.toString(), "success", newGameDTO);
     }
 
-    // 플레이어 대기상태 변경
-    public ResponseObject<GameDTO> changeReadiness(String token, Long gameId) {
-        UserEntity userEntity = findUserByToken(token);
-        Map<String, Object> gameMap = findGameByGameId(gameId);
+//    // 플레이어 대기상태 변경
+//    public ResponseObject<GameDTO> changeReadiness(String token, Long gameId) {
+//        UserEntity userEntity = findUserByToken(token);
+//        Map<String, Object> gameMap = findGameByGameId(gameId);
+//
+//        Game currentGame = (Game) gameMap.get("game");
+//        int currentGameIndex = (int) gameMap.get("index");
+//
+//        if(currentGame.getIsPlaying())
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
+//
+//        List<Player> playerList = currentGame.getPlayerList();
+//
+//        Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
+//        Player currentPlayer = (Player) playerMap.get("player");
+//        int currentPlayerIndex = (int) playerMap.get("index");
+//
+//        if(currentPlayer == null)
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : no player having such player id in game", null);
+//
+//        currentPlayer.setIsReady(!currentPlayer.getIsReady());
+//        playerList.set(currentPlayerIndex, currentPlayer);
+//        currentGame.setPlayerList(playerList);
+//        gameList.set(currentGameIndex, currentGame);
+//
+//        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+//    }
 
-        Game currentGame = (Game) gameMap.get("game");
-        int currentGameIndex = (int) gameMap.get("index");
-
-        if(currentGame.getIsPlaying())
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
-
-        List<Player> playerList = currentGame.getPlayerList();
-
-        Map<String, Object> playerMap = findPlayerByPlayerId(userEntity.getUserId(), playerList);
-        Player currentPlayer = (Player) playerMap.get("player");
-        int currentPlayerIndex = (int) playerMap.get("index");
-
-        if(currentPlayer == null)
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : no player having such player id in game", null);
-
-        currentPlayer.setIsReady(!currentPlayer.getIsReady());
-        playerList.set(currentPlayerIndex, currentPlayer);
-        currentGame.setPlayerList(playerList);
-        gameList.set(currentGameIndex, currentGame);
-
-        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
-    }
-
-    // 맵 변경
-    public ResponseObject<GameDTO> changeMap(Long gameId, String mapName) {
-        Game currentGame;
-        List<Player> playerList;
-        try {
-            Map<String, Object> gameMap = findGameByGameId(gameId);
-
-            currentGame = (Game) gameMap.get("game");
-            playerList = currentGame.getPlayerList();
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
-        }
-
-        if(currentGame.getIsPlaying())
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
-
-        GameDTO currentGameDTO;
-        try {
-            currentGame.setMapName(mapName);
-            currentGameDTO = convertEntityToDTO(currentGame);
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid map name", null);
-        }
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
-    }
+//    // 맵 변경
+//    public ResponseObject<GameDTO> changeMap(Long gameId, String mapName) {
+//        Game currentGame;
+//        List<Player> playerList;
+//        try {
+//            Map<String, Object> gameMap = findGameByGameId(gameId);
+//
+//            currentGame = (Game) gameMap.get("game");
+//            playerList = currentGame.getPlayerList();
+//        } catch (Exception e) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
+//        }
+//
+//        if(currentGame.getIsPlaying())
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
+//
+//        GameDTO currentGameDTO;
+//        try {
+//            currentGame.setMapName(mapName);
+//            currentGameDTO = convertEntityToDTO(currentGame);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid map name", null);
+//        }
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+//    }
 
     // 맵 변경
     public ResponseObject<GameDTO> changeDifficulty(Long gameId, Long difficulty) {
@@ -620,35 +620,35 @@ public class GameService {
         return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
     }
 
-    // 최대 플레이어 수 변경
-    public ResponseObject<GameDTO> changeMaxPlayer(Long gameId, Long maxPlayer) {
-        Game currentGame;
-        List<Player> playerList;
-        try {
-            Map<String, Object> gameMap = findGameByGameId(gameId);
-
-            currentGame = (Game) gameMap.get("game");
-            playerList = currentGame.getPlayerList();
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
-        }
-
-        if(currentGame.getIsPlaying())
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
-
-        GameDTO currentGameDTO;
-        try {
-            if(maxPlayer < playerList.size() || maxPlayer > 10)
-                throw new Exception();
-
-            currentGame.setMaxPlayer(maxPlayer);
-            currentGameDTO = convertEntityToDTO(currentGame);
-        } catch (Exception e) {
-            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
-        }
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
-    }
+//    // 최대 플레이어 수 변경
+//    public ResponseObject<GameDTO> changeMaxPlayer(Long gameId, Long maxPlayer) {
+//        Game currentGame;
+//        List<Player> playerList;
+//        try {
+//            Map<String, Object> gameMap = findGameByGameId(gameId);
+//
+//            currentGame = (Game) gameMap.get("game");
+//            playerList = currentGame.getPlayerList();
+//        } catch (Exception e) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : No game having such id", null);
+//        }
+//
+//        if(currentGame.getIsPlaying())
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Error : The game selected is already playing", null);
+//
+//        GameDTO currentGameDTO;
+//        try {
+//            if(maxPlayer < playerList.size() || maxPlayer > 10)
+//                throw new Exception();
+//
+//            currentGame.setMaxPlayer(maxPlayer);
+//            currentGameDTO = convertEntityToDTO(currentGame);
+//        } catch (Exception e) {
+//            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid difficulty value", null);
+//        }
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+//    }
 
     // 플레이어 삭제 (나가기)
     @Transactional
@@ -765,25 +765,25 @@ public class GameService {
         return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTO);
     }
 
-    // 대기방 새로고침
-    public ResponseObject<GameDTO> refreshGame(Long gameId) {
-        Map<String, Object> gameMap = findGameByGameId(gameId);
-        Game currentGame = (Game) gameMap.get("game");
+//    // 대기방 새로고침
+//    public ResponseObject<GameDTO> refreshGame(Long gameId) {
+//        Map<String, Object> gameMap = findGameByGameId(gameId);
+//        Game currentGame = (Game) gameMap.get("game");
+//
+//        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
+//    }
 
-        GameDTO currentGameDTO = convertEntityToDTO(currentGame);
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", currentGameDTO);
-    }
-
-    // 대기방 채팅
-    public GameChatDTO chat(String token, GameChatDTO chatMessage) {
-        UserEntity user = findUserByToken(token);
-        if(user == null) return null;
-
-//        return user.getNickname() + ": " + chatMessage;
-//        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
-
-        return chatMessage;
-    }
+//    // 대기방 채팅
+//    public GameChatDTO chat(String token, GameChatDTO chatMessage) {
+//        UserEntity user = findUserByToken(token);
+//        if(user == null) return null;
+//
+////        return user.getNickname() + ": " + chatMessage;
+////        return chatMessage.getNickname() + " : " + chatMessage.getMessage();
+//
+//        return chatMessage;
+//    }
 
     public void initializeMatch(UserDTO userDTO) {
         for(int i = 0; i < gameList.size(); i++) {
