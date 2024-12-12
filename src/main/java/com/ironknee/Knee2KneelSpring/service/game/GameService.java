@@ -166,7 +166,7 @@ public class GameService {
                     .rankPoint(userEntity.getRankPoint())
                     .playerRole(PlayerRole.professor)
                     .isAdmin(true)
-                    .isReady(false)
+                    .isReady(true)
                     .skillNumList(new ArrayList<>())   // 장착 스킬 없음
                     .characterNum(0L)                  // Default Character
                     .isAI(false)
@@ -786,9 +786,33 @@ public class GameService {
     }
 
     public void initializeMatch(UserDTO userDTO) {
-        for(Game game : gameList) {
-            if(game.getPlayerList().isEmpty()) continue;
-            game.getPlayerList().removeIf(player -> player.getUserId().equals(userDTO.getUserId()));
+        for(int i = 0; i < gameList.size(); i++) {
+            Game currentGame = gameList.get(i);
+            List<Player> playerList = currentGame.getPlayerList();
+
+            playerList.removeIf(player -> player.getUserId().equals(userDTO.getUserId()));
+
+            boolean hasAdmin = false;
+            // 남아있는 유저 중 가장 먼저 들어온 유저에게 방장 권한 위임
+            if(!playerList.isEmpty()) {
+                for(int j = 0; j < playerList.size(); j++) {
+                    if(playerList.get(j).getIsAdmin()) {
+                        hasAdmin = true;
+                        break;
+                    }
+                }
+
+                if(!hasAdmin) {
+                    Player newAdminPlayer = playerList.get(0);
+                    newAdminPlayer.setIsAdmin(true);
+                    playerList.set(i, newAdminPlayer);
+                }
+            }
+
+            currentGame.setPlayerList(playerList);
+            gameList.set(i, currentGame);
         }
+
+        gameList.removeIf((game -> game.getPlayerList().isEmpty()));
     }
 }
