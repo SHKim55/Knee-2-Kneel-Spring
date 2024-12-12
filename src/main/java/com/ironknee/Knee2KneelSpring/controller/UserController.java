@@ -39,7 +39,7 @@ public class UserController {
         if(userMap.containsKey("error")) {
             return new ResponseObject<>(ResponseCode.fail.toString(), userMap.get("error").toString(), null);
         } else if(userMap.containsKey("new")) {  // 신규 로그인
-            return new ResponseObject<>(ResponseCode.fail.toString(), "success", (UserDTO) userMap.get("new"));
+            return new ResponseObject<>(ResponseCode.success.toString(), "success", (UserDTO) userMap.get("new"));
         }
 
         // 재접속
