@@ -42,6 +42,7 @@ public class WebSocketController {
         headerMap.put("clientId", clientId);
 
         System.out.println(response.getData().getGameId());
+        searchGames();
         simpMessagingTemplate.convertAndSend("/sub/game/create", response);
     }
 
@@ -49,6 +50,7 @@ public class WebSocketController {
     @MessageMapping("/game/search")
     @SendTo("/sub/game/search")
     public ResponseObject<List<GameDTO>> searchGames() {
+        System.out.println("Calling searchGames");
         return gameService.searchGames();
     }
 
@@ -58,6 +60,7 @@ public class WebSocketController {
                           @Header(name = "gameId") Long gameId) {
         ResponseObject<GameDTO> response = gameService.enterGame(token, gameId);
 
+        searchGames();
         simpMessagingTemplate.convertAndSend("/sub/game/enter", response);
         simpMessagingTemplate.convertAndSend("/sub/game/data/" + gameId, response);
         return gameService.enterGame(token, gameId);
@@ -85,6 +88,7 @@ public class WebSocketController {
         else {
             simpMessagingTemplate.convertAndSend(exitDestination, response);
         }
+        searchGames();
     }
 
     // 채팅 메시지 보내기
