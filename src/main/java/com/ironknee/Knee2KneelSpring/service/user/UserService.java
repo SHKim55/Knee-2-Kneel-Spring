@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 public class UserService {
@@ -51,6 +52,19 @@ public class UserService {
         return optionalUserEntity.orElse(null);
     }
 
+    private boolean isValidEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return false; // null 또는 빈 문자열은 유효하지 않음
+        }
+
+        // 이메일 정규식
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+
+        // Pattern 클래스 사용
+        Pattern pattern = Pattern.compile(emailRegex);
+        return pattern.matcher(email).matches();
+    }
+
     public static UserDTO convertEntityToDTO(final UserEntity userEntity) {
         return UserDTO.builder()
                 .userId(userEntity.getUserId())
@@ -72,6 +86,10 @@ public class UserService {
         }
         if(userRepository.existsByNickname(userRegisterDTO.getNickname())) {
             return new ResponseObject<>(ResponseCode.fail.toString(), "DB Error : User having this nickname already exists", null);
+        }
+
+        if(!isValidEmail(userRegisterDTO.getEmail())) {
+            return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : User having wrong email input", null);
         }
 
         String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
