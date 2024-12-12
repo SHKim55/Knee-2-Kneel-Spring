@@ -77,24 +77,25 @@ public class WebSocketController {
         ResponseObject<GameDTO> response = gameService.exitGame(token, gameId);
 
         String dataDestination = "/sub/game/data/" + gameId;
+        String exitDestination = "/sub/game/exit/" + gameId;
         if(!(response.getData() == null)) {   // 방이 사람이 남아있는 경우
             simpMessagingTemplate.convertAndSend(dataDestination, response);
-            simpMessagingTemplate.convertAndSend("/sub/game/exit", response);
+            simpMessagingTemplate.convertAndSend(exitDestination, response);
         }
         else {
-            simpMessagingTemplate.convertAndSend("/sub/game/exit", response);
+            simpMessagingTemplate.convertAndSend(exitDestination, response);
         }
     }
 
     // 채팅 메시지 보내기
     @MessageMapping("/game/chat")
     public void chat(@Header("Authorization") String token, @Header(name = "gameId") Long gameId,
-                     @Payload GameChatDTO chatMessage) {
+                     @Payload String chatMessage) {
 
         System.out.println(token);
 
         try {
-            GameChatDTO chatData = gameService.chat(token, chatMessage);
+            String chatData = gameService.chat(token, chatMessage);
             if(chatData == null)
                 throw new NullPointerException();
 
@@ -118,7 +119,9 @@ public class WebSocketController {
     // 플레이어 대기완료 상태 부여
     // 각 플레이어의 대기완료 여부 변경
     @MessageMapping("/game/modify/ready")
-    public void changeReadiness(@Header(name = "Authorization") String token, @Header(name = "gameId") Long gameId) {
+    public void changeReadiness(
+            @Header(name = "Authorization") String token,
+            @Header(name = "gameId") Long gameId) {
         ResponseObject<GameDTO> response = gameService.changeReadiness(token, gameId);
         String dataDestination = "/sub/game/data/" + gameId;
         simpMessagingTemplate.convertAndSend(dataDestination, response);
