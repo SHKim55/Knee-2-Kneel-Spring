@@ -775,7 +775,7 @@ public class GameService {
     }
 
     // 대기방 채팅
-    public GameChatDTO chat(String token, GameChatDTO chatMessage) {
+    public String chat(String token, String chatMessage) {
         UserEntity user = findUserByToken(token);
         if(user == null) return null;
 
