@@ -739,30 +739,47 @@ public class GameService {
     }
 
     // 게임 종료 (종료 후 대기방으로 복귀)
+//    @Transactional
+//    public ResponseObject<GameDTO> finishGame(Long gameId, GameResultDTO gameResultDTO) {
+//        Map<String, Object> gameMap = findGameByGameId(gameId);
+//        Game currentGame = (Game) gameMap.get("game");
+//        int currentGameIndex = (int) gameMap.get("index");
+//        List<Player> playerList = currentGame.getPlayerList();
+//
+//        playerList.removeIf(player -> !gameResultDTO.getPlayerIdList().contains(player.getUserId()));
+//
+//        for(Player player : playerList) {
+//            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(player.getUserId());
+//            if(optionalUserEntity.isEmpty())
+//                return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid player information", null);
+//
+//            UserEntity userEntity = optionalUserEntity.get();
+//            userEntity.setMatchStatus(MatchStatus.none);
+//            userRepository.save(userEntity);
+//        }
+//
+//        currentGame.setPlayerList(playerList);
+//        gameList.set(currentGameIndex, currentGame);
+//        GameDTO gameDTO = convertEntityToDTO(currentGame);
+//
+//        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTO);
+//    }
+
+    // 게임 종료 (종료 후 로비로 복귀)
     @Transactional
     public ResponseObject<GameDTO> finishGame(Long gameId, GameResultDTO gameResultDTO) {
-        Map<String, Object> gameMap = findGameByGameId(gameId);
-        Game currentGame = (Game) gameMap.get("game");
-        int currentGameIndex = (int) gameMap.get("index");
-        List<Player> playerList = currentGame.getPlayerList();
-
-        playerList.removeIf(player -> !gameResultDTO.getPlayerIdList().contains(player.getUserId()));
-
-        for(Player player : playerList) {
-            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(player.getUserId());
-            if(optionalUserEntity.isEmpty())
-                return new ResponseObject<>(ResponseCode.fail.toString(), "Server Error : Invalid player information", null);
+        for(UUID playerId : gameResultDTO.getPlayerIdList()) {
+            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(playerId);
+            if(optionalUserEntity.isEmpty()) continue;
 
             UserEntity userEntity = optionalUserEntity.get();
-            userEntity.setMatchStatus(MatchStatus.matched);
-            userRepository.save(userEntity);
+            userEntity.setMatchStatus(MatchStatus.none);
         }
 
-        currentGame.setPlayerList(playerList);
-        gameList.set(currentGameIndex, currentGame);
-        GameDTO gameDTO = convertEntityToDTO(currentGame);
-
-        return new ResponseObject<>(ResponseCode.success.toString(), "success", gameDTO);
+        Map<String, Object> gameMap = findGameByGameId(gameId);
+        int currentGameIndex = (int) gameMap.get("index");
+        gameList.remove(currentGameIndex);
+        return new ResponseObject<>(ResponseCode.success.toString(), "success", null);
     }
 
     // 대기방 새로고침
