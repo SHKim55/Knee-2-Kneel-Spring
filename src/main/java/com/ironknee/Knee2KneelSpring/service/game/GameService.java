@@ -767,17 +767,21 @@ public class GameService {
 
     // 게임 종료 (종료 후 로비로 복귀)
     @Transactional
-    public ResponseObject<GameDTO> finishGame(Long gameId, GameResultDTO gameResultDTO) {
-        for(UUID playerId : gameResultDTO.getPlayerIdList()) {
-            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(playerId);
+    public ResponseObject<GameDTO> finishGame(Long gameId) {
+        Map<String, Object> gameMap = findGameByGameId(gameId);
+        int currentGameIndex = (int) gameMap.get("index");
+        Game currentGame = (Game) gameMap.get("game");
+
+        List<Player> currentPlayerList = currentGame.getPlayerList();
+        for(Player player : currentPlayerList) {
+            Optional<UserEntity> optionalUserEntity = userRepository.findUserEntityByUserId(player.getUserId());
             if(optionalUserEntity.isEmpty()) continue;
 
             UserEntity userEntity = optionalUserEntity.get();
             userEntity.setMatchStatus(MatchStatus.none);
+            userRepository.save(userEntity);
         }
 
-        Map<String, Object> gameMap = findGameByGameId(gameId);
-        int currentGameIndex = (int) gameMap.get("index");
         gameList.remove(currentGameIndex);
         return new ResponseObject<>(ResponseCode.success.toString(), "success", null);
     }

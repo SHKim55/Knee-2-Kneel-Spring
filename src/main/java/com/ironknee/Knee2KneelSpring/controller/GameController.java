@@ -132,8 +132,8 @@ public class GameController {
     // 게임이 종료된 경우 해당 게임방 객체 삭제
     // 게임 종료 후 통계치 업데이트 부분은 StatisticsController로 이관
     @PostMapping("/finish/{gameId}")
-    public ResponseObject<GameDTO> finishGame(@PathVariable Long gameId, @RequestBody GameResultDTO gameResultDTO) {
-        return gameService.finishGame(gameId, gameResultDTO);
+    public ResponseObject<GameDTO> finishGame(@PathVariable Long gameId) {
+        return gameService.finishGame(gameId);
     }
 
     // 게임방 상태 새로고침
